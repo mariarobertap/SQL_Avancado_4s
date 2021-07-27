@@ -77,12 +77,13 @@ CREATE PROCEDURE AlteraValorPcateg
 @novoValor numeric(10,2)
 AS
 	IF  @idCategoria <= (select count(id) from categoria)
-		update filme set valor = @novoValor where categoriaId = @idCategoria 
+		update filme set valor = (valor + ((valor/100) * @novoValor)) where categoriaId = @idCategoria 
 	ELSE 
 		SELECT 'OPA'
 drop procedure AlteraValorPcateg
 
-exec AlteraValorPcateg  6, 100
+exec AlteraValorPcateg  5, 10
+select * from filme
 
 /*Criar uma SP para gerar um relatório de
 locações de categoria de filmes,
