@@ -1,46 +1,6 @@
-SET LANGUAGE Brazilian
-IF DATEPART(weekday, GETDATE()) IN ('SABADO', 'DOMINGO')
-	SELECT 'Final de semana'
-ELSE
-	SELECT 'Dia de semana'	
-
-declare @i  int = 0;
-while @i < 1 /*6*/
-begin
-
-	set @i += 1;
-	/*select * from filme where id = @i*/
-	select top 6 * from filme order by id
-end;	
-
-select * from filme
-select * from locacao
-select * from fita
-
-select distinct
-	l.fitaId, count(
-from 
-	locacao l
 
 /*liste os filmes e a quantidade
 de vezes que cada filme foi locado.*/
-
-select 
-	 l.fitaId, count(f.id) as 'Qtd locação', fi.descricao, c.descricao
-from 
-	locacao l 
-		join fita f on f.id = l.fitaId
-		join filme fi on fi.id = f.filmeId
-		join categoria c on c.id = fi.categoriaId
-		where c.descricao = 'Ação'
-group by l.fitaId, fi.descricao,  c.descricao
-
-select * from filme
-select * from locacao
-insert into locacao (clienteId, fitaId, dataLocacao) values(1, 18, getdate())
-select 
-	descricao, categoria, fita
-
 
 GO
 CREATE PROCEDURE BuscaPorCategoria 
@@ -57,6 +17,8 @@ FROM
 group by l.fitaId, fi.descricao,  c.descricao
 
 EXEC BuscaPorCategoria 'Comédia'
+
+/*Crie uma SP que altere o status do cliente*/ 
 
 GO
 CREATE PROCEDURE UpdateStatusCliente 
