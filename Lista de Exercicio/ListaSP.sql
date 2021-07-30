@@ -62,5 +62,53 @@ mês/ano (mês e ano serão parâmetros IN)
 	group by l.clienteId, c.nome
 
 
+	
+/*
+(5) Listar quais filmes nunca foram locados.
+*/
 
+	SELECT DISTINCT
+		fi.descricao
+	FROM
+		filme fi
+	where 
+		fi.id NOT IN (	SELECT 
+							fi.id
+						FROM
+							fita fit
+						JOIN 
+							filme fi ON fi.id = fit.filmeId
+						JOIN 
+							locacao l ON l.fitaId = fit.id
+					  )
 
+		
+/*
+(06) Listar quais clientes nunca efetuaram uma locação.
+*/
+	select 
+		* 
+	from 
+		cliente c 
+	where 
+		c.id NOT IN (SELECT clienteId FROM locacao)
+
+/*
+(07) Listar a data da última locação de um determinado cliente.
+*/
+	SELECT 
+		 c.nome, MAX(l.dataLocacao)
+	FROM 
+		cliente c 
+	join
+		locacao l on l.clienteId = c.id
+	group by c.nome
+
+/*
+(07) Calcule o valor total de locações e o valor total de locações acumulado por mês (ano será 
+parâmetro IN)
+*/
+
+	
+	
+	
