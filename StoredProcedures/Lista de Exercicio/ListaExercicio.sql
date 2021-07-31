@@ -179,4 +179,53 @@ parâmetro IN)
 	group by month(lo.dataLocacao)
 	--where month(lo.dataLocacao) = 1
 	
+
+
+/*09) Listar a quantidade de locações por categoria de filme. Exibir cada categoria de filme sendo 
+uma coluna. (Conceito Pivot Table)
+*/
+
+	SELECT
+		[Ação],
+		[Terror],
+		[Comédia],
+		[Drama],
+		[Ficção Científica]
+		
+	FROM (
+		SELECT DISTINCT 
+			cat.descricao,
+			fit.filmeId
+		FROM
+			locacao l
+		JOIN 
+			fita fit ON fit.id = l.fitaId
+		JOIN 
+			filme fi ON fi.id = fit.filmeId
+		JOIN 
+			categoria cat ON cat.id = fi.categoriaId
+	) AS SOURCE
+	PIVOT(
+		COUNT(filmeId)
+		FOR [Descricao] in ([Ação], [Terror], [Comédia], [Drama], [Ficção Científica])
+	) AS PVT
 	
+
+/*10) DESAFIO: Listar o ranking de filmes mais locados. (Conceito de Rank
+*/
+
+	SELECT 
+		FI.descricao, COUNT(LO.fitaId) AS 'Locacoes',
+		ROW_NUMBER() OVER(ORDER BY COUNT(LO.fitaId)desc ) AS Rank
+	FROM 
+		filme fi 
+	JOIN
+		fita ft ON ft.filmeId = fi.id
+	JOIN 
+		locacao lo ON lo.fitaId = ft.id
+	GROUP BY
+		fi.descricao, lo.fitaId
+
+--https://www.sqlshack.com/overview-of-sql-rank-functions/
+
+
