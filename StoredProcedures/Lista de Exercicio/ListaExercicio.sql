@@ -168,16 +168,36 @@ EXEC UltimaLocacao 2
 parâmetro IN)
 */
 
-	select 
-		sum(f.valor), month(lo.dataLocacao)
-	from
-		locacao lo
-	join
-		fita fi on fi.id = lo.fitaId
-	join
-		filme f on f.id = fi.filmeId
-	group by month(lo.dataLocacao)
-	--where month(lo.dataLocacao) = 1
+
+		SELECT
+			ISNULL([Janeiro], 0) AS Janeiro,
+			ISNULL([Fevereiro], 0) AS Fevereiro,
+			ISNULL([Março], 0) AS MARÇO,
+			ISNULL([Abril],0) AS ABRIL,
+			ISNULL([Maio], 0) AS MAIO,
+			ISNULL([Junho], 0) AS JUNHO,
+			ISNULL([Julho], 0) AS JULHO,
+			ISNULL([Agosto], 0) AS AGOSTO,
+			ISNULL([Setembro],0) AS SETEMBRO,
+			ISNULL([Outubro], 0) AS OUTUBRO,
+			ISNULL([Novembro], 0) AS NOVEMBRO,
+			ISNULL([Dezembro], 0) AS DEZEMBRO
+		
+	FROM (
+		select 
+			f.valor, DATENAME(month,lo.dataLocacao) as [Month]
+		from
+			locacao lo
+		join
+			fita fi on fi.id = lo.fitaId
+		join
+			filme f on f.id = fi.filmeId
+	) AS SOURCE
+	PIVOT(
+		sum(valor)
+		FOR [Month] in ([Janeiro], [Fevereiro], [Março], [Abril], [Maio], [Junho], [Julho], [Agosto], [Setembro], [Outubro], [Novembro], [Dezembro] )
+	) AS PVT
+	
 	
 
 
@@ -207,7 +227,7 @@ uma coluna. (Conceito Pivot Table)
 	) AS SOURCE
 	PIVOT(
 		COUNT(filmeId)
-		FOR [Descricao] in ([Ação], [Terror], [Comédia], [Drama], [Ficção Científica])
+		FOR descricao in ([Ação], [Terror], [Comédia], [Drama], [Ficção Científica])
 	) AS PVT
 	
 
@@ -224,7 +244,7 @@ uma coluna. (Conceito Pivot Table)
 	JOIN 
 		locacao lo ON lo.fitaId = ft.id
 	GROUP BY
-		fi.descricao, lo.fitaId
+		fi.descricao
 
 --https://www.sqlshack.com/overview-of-sql-rank-functions/
 
