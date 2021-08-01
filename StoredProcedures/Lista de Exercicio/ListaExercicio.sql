@@ -312,4 +312,43 @@ uma coluna. (Conceito Pivot Table)
 
 --https://www.sqlshack.com/overview-of-sql-rank-functions/
 
+-------------------------------------------------------------------
 
+
+
+
+--Utilizando o BD LOCADORA crie as seguintes Functions:
+/*
+01) Crie uma função que informado dois valores retorne uma string informando se o número é 
+par ou ímpar.
+
+02) Crie uma função que retorne o número mais o nome do mês em português (1 - Janeiro) de 
+acordo com o parâmetro informado que deve ser uma data. Para testar, crie uma consulta que 
+retorne o cliente e mês de locação (número e nome do mês).
+
+03) Crie uma função que retorne o número mais o nome do dia da semana em português (1 -
+Segunda), como parâmetro de entrada receba uma data. Para testar, crie uma consulta que 
+retorne o código do cliente, o nome do cliente e dia da semana da locação utilizando a função 
+criada.
+
+04) Crie uma função para retornar o gentílico dos clientes de acordo com o estado onde 
+moram (gaúcho, catarinense ou paranaense), o parâmetro de entrada deve ser a sigla do 
+estado. Para testar a função crie uma consulta que liste o nome do cliente e gentílico 
+utilizando a função criada.
+
+05) Crie uma função que retorne o CPF do cliente no formato ###.###.###-##. Para testar a 
+função criada exiba os dados do cliente com o CPF formatado corretamente utilizando a 
+função criada.
+
+06) Crie uma função que faça a comparação entre dois números inteiros. Caso os dois números 
+sejam iguais a saída deverá ser “x é igual a y”, no qual x é o primeiro parâmetro e y o segundo 
+parâmetro. Se x for maior, deverá ser exibido “x é maior que y”. Se x for menor, deverá ser 
+exibido “x é menor que y”.
+
+07) Crie uma função que calcule a fórmula de Bhaskara. Como parâmetro de entrada devem 
+ser recebidos 3 valores (a, b e c). Ao final a função deve retornar “Os resultados calculados são 
+x e y”, no qual x e y são os valores calculados.
+
+08) Crie uma função que informado a data de nascimento como parâmetro retorne a idade da 
+pessoa em anos
+*/
