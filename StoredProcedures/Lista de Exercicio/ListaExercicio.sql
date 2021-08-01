@@ -197,7 +197,71 @@ parâmetro IN)
 		sum(valor)
 		FOR [Month] in ([Janeiro], [Fevereiro], [Março], [Abril], [Maio], [Junho], [Julho], [Agosto], [Setembro], [Outubro], [Novembro], [Dezembro] )
 	) AS PVT
-	
+
+
+
+		select 
+			f.valor, sum(f.valor),
+			DATENAME(month,lo.dataLocacao) as [Month],
+			(select distinct 
+				sum(f.valor) 
+				from
+					fita fi
+				join
+					locacao lo on fi.id = lo.fitaId
+				join
+					filme f on f.id = fi.filmeId
+					WHERE 
+						YEAR(lo.dataLocacao) = 2019 and  month(lo.dataLocacao) = 12
+				) as total
+		from
+			fita fi
+		join
+			locacao lo on fi.id = lo.fitaId
+		join
+			filme f on f.id = fi.filmeId
+		--INNER join
+			--locacao lo2 on lo.dataLocacao  <= lo2.dataLocacao
+		WHERE 
+			YEAR(lo.dataLocacao) = 2019 and  month(lo.dataLocacao) = 12
+		group by DATENAME(month,lo.dataLocacao), f.valor
+		--order by DATENAME(month,lo.dataLocacao) desc
+
+
+
+
+		select 
+		 tab.valor, sum(tab.valor)
+		from(
+		
+			select 
+				f.valor,
+				lo.dataLocacao 
+			from
+				fita fi
+			join
+				locacao lo on fi.id = lo.fitaId
+			join
+				filme f on f.id = fi.filmeId
+			where year(lo.dataLocacao) = 2019 and month(lo.dataLocacao) = 12
+		) as tab
+		INNER join (
+
+			select 
+				f2.valor,
+				lo2.dataLocacao 
+			from
+				fita fi2
+			join
+				locacao lo2 on fi2.id = lo2.fitaId
+			join
+				filme f2 on f2.id = fi2.filmeId
+			where year(lo2.dataLocacao) = 2019 and month(lo2.dataLocacao) = 12
+
+		) as tab2 on month(tab.dataLocacao)  >= month(tab2.dataLocacao)
+		group by 
+			tab.valor
+
 	
 
 
