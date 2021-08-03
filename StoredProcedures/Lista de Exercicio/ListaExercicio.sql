@@ -56,7 +56,7 @@ mês/ano (mês e ano serão parâmetros IN)
 GO
 CREATE PROCEDURE LocacaoPanoEmes (@mes INT, @ano INT)
 AS
-
+BEGIN
 	IF((@mes <= 12 AND @mes >= 1) AND (@ANO <= 9999 AND @ANO >= 1000))
 		 begin
 	 			SELECT DISTINCT 
@@ -78,6 +78,7 @@ AS
 		 end
 	 ELSE
 		 select 'Data invalida'
+END;
 
 DROP procedure LocacaoPanoEmes
 select * from locacao
@@ -92,13 +93,20 @@ EXEC LocacaoPanoEmes 11, 2019
 GO
 CREATE PROCEDURE ClientesDevolucao
 AS
-	select distinct
-		l.clienteId, c.nome, count(l.fitaId) 'Filmes a devolver'
+BEGIN
+	SELECT DISTINCT 
+		l.clienteId,
+		c.nome,
+		count(l.fitaId) 'Filmes a devolver'
 	from 
 		locacao l
-	join cliente c on c.id = l.clienteId
-	where l.dataDevolucao IS NULL
-	group by l.clienteId, c.nome
+		join cliente c on c.id = l.clienteId
+	where 
+		l.dataDevolucao IS NULL
+	group by
+		l.clienteId, c.nome
+END;
+DROP PROCEDURE ClientesDevolucao
 
 EXEC ClientesDevolucao 
 
@@ -111,7 +119,8 @@ CREATE PROCEDURE FilmesNuncaLocados
 AS
 
 	SELECT DISTINCT
-		fi.id, fi.descricao
+		fi.id,
+		fi.descricao
 	FROM
 		filme fi
 	where 
@@ -153,8 +162,10 @@ GO
 CREATE PROCEDURE UltimaLocacao
 @idCliente INT 
 AS
-	SELECT 
-		 c.nome, MAX(l.dataLocacao)
+	SELECT
+		 c.id,
+		 c.nome,
+		 MAX(l.dataLocacao)
 	FROM 
 		cliente c 
 	join
@@ -202,70 +213,31 @@ parâmetro IN)
 	) AS PVT
 
 
+	SELECT
+		MONTH(l.dataLocacao) as mes,
+		SUM(f.valor) as vlrTotal,
+		vlrAcumulado = (
+			SELECT 
+				sum(fs.valor)
+			FROM
+				locacao ls
+			JOIN 
+				fita fts on fts.id = ls.fitaId
+			JOIN
+				filme fs on fs.id = fts.filmeId
 
-		select 
-			f.valor, sum(f.valor),
-			DATENAME(month,lo.dataLocacao) as [Month],
-			(select distinct 
-				sum(f.valor) 
-				from
-					fita fi
-				join
-					locacao lo on fi.id = lo.fitaId
-				join
-					filme f on f.id = fi.filmeId
-					WHERE 
-						YEAR(lo.dataLocacao) = 2019 and  month(lo.dataLocacao) = 12
-				) as total
-		from
-			fita fi
-		join
-			locacao lo on fi.id = lo.fitaId
-		join
-			filme f on f.id = fi.filmeId
-		--INNER join
-			--locacao lo2 on lo.dataLocacao  <= lo2.dataLocacao
-		WHERE 
-			YEAR(lo.dataLocacao) = 2019 and  month(lo.dataLocacao) = 12
-		group by DATENAME(month,lo.dataLocacao), f.valor
-		--order by DATENAME(month,lo.dataLocacao) desc
-
-
-
-
-		select 
-		 tab.valor, sum(tab.valor)
-		from(
-		
-			select 
-				f.valor,
-				lo.dataLocacao 
-			from
-				fita fi
-			join
-				locacao lo on fi.id = lo.fitaId
-			join
-				filme f on f.id = fi.filmeId
-			where year(lo.dataLocacao) = 2019 and month(lo.dataLocacao) = 12
-		) as tab
-		INNER join (
-
-			select 
-				f2.valor,
-				lo2.dataLocacao 
-			from
-				fita fi2
-			join
-				locacao lo2 on fi2.id = lo2.fitaId
-			join
-				filme f2 on f2.id = fi2.filmeId
-			where year(lo2.dataLocacao) = 2019 and month(lo2.dataLocacao) = 12
-
-		) as tab2 on month(tab.dataLocacao)  >= month(tab2.dataLocacao)
-		group by 
-			tab.valor
-
-	
+			WHERE MONTH(ls.dataLocacao) <= MONTH(l.dataLocacao)
+			)
+		FROM 
+			locacao l
+		JOIN
+			fita ft on ft.id = l.fitaId
+		JOIN
+			filme f on f.id = ft.filmeId
+		WHERE
+			YEAR(l.dataLocacao) = 2019
+		GROUP BY
+			MONTH(l.dataLocacao)
 
 
 /*09) Listar a quantidade de locações por categoria de filme. Exibir cada categoria de filme sendo 
@@ -302,7 +274,8 @@ uma coluna. (Conceito Pivot Table)
 */
 
 	SELECT 
-		FI.descricao, COUNT(LO.fitaId) AS 'Locacoes',
+		FI.descricao,
+		COUNT(LO.fitaId) AS 'Locacoes',
 		ROW_NUMBER() OVER(ORDER BY COUNT(LO.fitaId)desc ) AS Rank
 	FROM 
 		filme fi 
@@ -323,12 +296,30 @@ uma coluna. (Conceito Pivot Table)
 --Utilizando o BD LOCADORA crie as seguintes Functions:
 /*
 01) Crie uma função que informado dois valores retorne uma string informando se o número é 
-par ou ímpar.
+par ou ímpar. */
 
+CREATE FUNCTION NumeroParOuImpar(@valor INT)
+RETURNS VARCHAR(50)
+AS
+BEGIN
+	RETURN IIF(@valor % 2 > 0, 'Impar', 'Par')
+END;
+
+SELECT dbo.NumeroParOuImpar(2)
+/*
 02) Crie uma função que retorne o número mais o nome do mês em português (1 - Janeiro) de 
 acordo com o parâmetro informado que deve ser uma data. Para testar, crie uma consulta que 
-retorne o cliente e mês de locação (número e nome do mês).
+retorne o cliente e mês de locação (número e nome do mês).*/
 
+CREATE FUNCTION EXERCICIO2(@data DATETIME)
+RETURNS VARCHAR(50)
+AS
+BEGIN
+	RETURN CONCAT(MONTH(@data), ' - ', UPPER(DATENAME(MONTH, @data)))
+END;
+
+SELECT dbo.EXERCICIO2(GETDATE())
+/*
 03) Crie uma função que retorne o número mais o nome do dia da semana em português (1 -
 Segunda), como parâmetro de entrada receba uma data. Para testar, crie uma consulta que 
 retorne o código do cliente, o nome do cliente e dia da semana da locação utilizando a função 
