@@ -294,55 +294,237 @@ uma coluna. (Conceito Pivot Table)
 
 
 --Utilizando o BD LOCADORA crie as seguintes Functions:
-/*
-01) Crie uma função que informado dois valores retorne uma string informando se o número é 
-par ou ímpar. */
-
-CREATE FUNCTION NumeroParOuImpar(@valor INT)
-RETURNS VARCHAR(50)
+01) Crie uma função que informado um valor retorne uma string informando se o número é
+par ou ímpar.
+*/
+CREATE FUNCTION FN_EXERCICIO_01(@valor INT)
+RETURNS VARCHAR(10)
 AS
 BEGIN
 	RETURN IIF(@valor % 2 > 0, 'Impar', 'Par')
 END;
 
-SELECT dbo.NumeroParOuImpar(2)
+SELECT dbo.FN_EXERCICIO_01(1)
+SELECT dbo.FN_EXERCICIO_01(2)
 /*
-02) Crie uma função que retorne o número mais o nome do mês em português (1 - Janeiro) de 
-acordo com o parâmetro informado que deve ser uma data. Para testar, crie uma consulta que 
-retorne o cliente e mês de locação (número e nome do mês).*/
-
-CREATE FUNCTION EXERCICIO2(@data DATETIME)
-RETURNS VARCHAR(50)
+02) Crie uma função que retorne o número mais o nome do mês em português (1 - Janeiro) de
+acordo com o parâmetro informado que deve ser uma data. Para testar, crie uma consulta que
+retorne o cliente e mês de locação (número e nome do mês).
+*/
+CREATE FUNCTION FN_EXERCICIO_02(@data DATETIME)
+RETURNS VARCHAR(20)
 AS
 BEGIN
 	RETURN CONCAT(MONTH(@data), ' - ', UPPER(DATENAME(MONTH, @data)))
 END;
 
-SELECT dbo.EXERCICIO2(GETDATE())
+SET LANGUAGE Portuguese;
+SELECT dbo.FN_EXERCICIO_02(GETDATE())
+
+SELECT
+	l.clienteId,
+	c.nome as cliente,
+	l.dataLocacao,
+	dbo.FN_EXERCICIO_02(l.dataLocacao) as mes
+FROM
+	locacao l
+	join cliente c
+		on c.id = l.clienteId
+
 /*
 03) Crie uma função que retorne o número mais o nome do dia da semana em português (1 -
-Segunda), como parâmetro de entrada receba uma data. Para testar, crie uma consulta que 
-retorne o código do cliente, o nome do cliente e dia da semana da locação utilizando a função 
+Domingo), como parâmetro de entrada receba uma data. Para testar, crie uma consulta que
+retorne o código do cliente, o nome do cliente e dia da semana da locação utilizando a função
 criada.
-
-04) Crie uma função para retornar o gentílico dos clientes de acordo com o estado onde 
-moram (gaúcho, catarinense ou paranaense), o parâmetro de entrada deve ser a sigla do 
-estado. Para testar a função crie uma consulta que liste o nome do cliente e gentílico 
-utilizando a função criada.
-
-05) Crie uma função que retorne o CPF do cliente no formato ###.###.###-##. Para testar a 
-função criada exiba os dados do cliente com o CPF formatado corretamente utilizando a 
-função criada.
-
-06) Crie uma função que faça a comparação entre dois números inteiros. Caso os dois números 
-sejam iguais a saída deverá ser “x é igual a y”, no qual x é o primeiro parâmetro e y o segundo 
-parâmetro. Se x for maior, deverá ser exibido “x é maior que y”. Se x for menor, deverá ser 
-exibido “x é menor que y”.
-
-07) Crie uma função que calcule a fórmula de Bhaskara. Como parâmetro de entrada devem 
-ser recebidos 3 valores (a, b e c). Ao final a função deve retornar “Os resultados calculados são 
-x e y”, no qual x e y são os valores calculados.
-
-08) Crie uma função que informado a data de nascimento como parâmetro retorne a idade da 
-pessoa em anos
 */
+CREATE FUNCTION FN_EXERCICIO_03(@data DATETIME)
+RETURNS VARCHAR(20)
+AS
+BEGIN
+	RETURN CONCAT(DATEPART(WEEKDAY, @data), ' - ', DATENAME(WEEKDAY, @data))
+END
+
+SELECT dbo.FN_EXERCICIO_03(GETDATE())
+
+SELECT
+	l.clienteId,
+	c.nome as cliente,
+	l.dataLocacao,
+	dbo.FN_EXERCICIO_03(l.dataLocacao) as diaSemana
+FROM
+	locacao l
+	join cliente c
+		on c.id = l.clienteId
+
+SELECT
+	dbo.FN_EXERCICIO_03(l.dataLocacao) as diaSemana,
+	COUNT(*) as qtde
+FROM
+	locacao l
+GROUP BY
+	dbo.FN_EXERCICIO_03(l.dataLocacao)
+ORDER BY
+	1
+
+/*
+04) Crie uma função para retornar o gentílico dos clientes de acordo com o estado onde
+moram (gaúcho, catarinense ou paranaense), o parâmetro de entrada deve ser a sigla do
+estado. Para testar a função crie uma consulta que liste o nome do cliente e gentílico
+utilizando a função criada.
+*/
+CREATE FUNCTION FN_EXERCICIO_04(@uf CHAR(2))
+RETURNS VARCHAR(20)
+AS
+BEGIN
+	DECLARE @gentilico VARCHAR(20)
+	
+	SET @gentilico = 
+	CASE @uf
+		WHEN 'PR' THEN 'paranaense'
+		WHEN 'SC' THEN 'catarinese'
+		WHEN 'RS' THEN 'gaúcho'
+		ELSE 'não informado'
+	END
+		
+	RETURN @gentilico
+END
+
+SELECT dbo.FN_EXERCICIO_04('RS')
+
+UPDATE cliente SET estado = 'SC' WHERE id not in(1, 2)
+
+SELECT 
+	nome as cliente,
+	dbo.FN_EXERCICIO_04(estado) as gentilico
+FROM 
+	cliente
+
+/*
+05) Crie uma função que retorne o CPF do cliente no formato ###.###.###-##. Para testar a
+função criada exiba os dados do cliente com o CPF formatado corretamente utilizando a
+função criada.
+*/
+CREATE FUNCTION FN_EXERCICIO_05(@cpf VARCHAR(11))
+RETURNS VARCHAR(14)
+AS
+BEGIN
+	RETURN CONCAT(
+		LEFT(@cpf, 3), 
+		'.', 
+		SUBSTRING(@cpf, 4, 3), 
+		'.', 
+		SUBSTRING(@cpf, 7, 3), 
+		'-', 
+		RIGHT(@cpf, 2)
+	)
+END;
+
+SELECT dbo.FN_EXERCICIO_05('71026854083')
+
+SELECT 
+	nome as cliente,
+	dbo.FN_EXERCICIO_05(cpf) as cpf
+FROM 
+	cliente
+
+/*
+06) Crie uma função que faça a comparação entre dois números inteiros. Caso os dois números
+sejam iguais a saída deverá ser “x é igual a y”, no qual x é o primeiro parâmetro e y o segundo
+parâmetro. Se x for maior, deverá ser exibido “x é maior que y”. Se x for menor, deverá ser
+exibido “x é menor que y”.
+*/
+CREATE FUNCTION FN_EXERCICIO_06(@x INT, @y INT)
+RETURNS VARCHAR(20)
+AS
+BEGIN
+	DECLARE @res VARCHAR(20)
+
+	IF (@x = @y)
+		SET @res = 'x é igual a y'
+	ELSE IF (@x > @y)
+			SET @res = 'x é maior que y'
+		ELSE
+			SET @res = 'x é menor que y'
+
+	RETURN @res
+END
+
+SELECT dbo.FN_EXERCICIO_06(15, 10)
+SELECT dbo.FN_EXERCICIO_06(10, 10)
+SELECT dbo.FN_EXERCICIO_06(5, 10)
+
+/*
+07) Crie uma função que calcule a fórmula de Bhaskara. Como parâmetro de entrada devem
+ser recebidos 3 valores (a, b e c). Ao final a função deve retornar “Os resultados calculados são
+x e y”, no qual x e y são os valores calculados.
+*/
+CREATE FUNCTION FN_EXERCICIO_07(@a INT, @b INT, @c INT)
+RETURNS VARCHAR(100)
+AS
+BEGIN
+	DECLARE @x INT;
+	DECLARE @y INT;
+	DECLARE @delta FLOAT;
+
+	SET @delta = (@b * @b) - (4 * @a * @c)
+
+	SET @x = (-@b + SQRT(@delta)) / (2 * @a);
+	SET @y = (-@b - SQRT(@delta)) / (2 * @a);
+
+	RETURN CONCAT('Os resultados calculados são x e y: ', @x, ', ', @y) 
+END;
+
+SELECT dbo.FN_EXERCICIO_07(1, 5, 4)
+
+/*
+08) Crie uma função que informado a data de nascimento como parâmetro retorne a idade da
+pessoa em anos.
+*/
+CREATE FUNCTION FN_EXERCICIO_08(@data DATE)
+RETURNS INT
+AS
+BEGIN
+	RETURN FLOOR(DATEDIFF(DAY, @data, GETDATE()) / 365.25)
+END
+
+SELECT dbo.FN_EXERCICIO_08('1986-05-22')
+
+/*
+09) Faça uma função que retorna o código do cliente com a maior quantidade de locações por 
+ano/mês. Observe que a função deverá receber como parâmetros um ano e um mês. Deve ser 
+exibido a seguinte expressão: “O cliente XXXXXXX (cód) – XXXXXXX (nome) foi o cliente que fez 
+a maior quantidade de locações no ano XXXX mês XX com um total de XXX locações”. 
+*/
+CREATE FUNCTION FN_EXERCICIO_09(@ano INT, @mes INT)
+RETURNS VARCHAR(200)
+AS
+BEGIN
+	DECLARE @id INT
+	DECLARE @nome VARCHAR(100)
+	DECLARE @qtdeLocacoes INT
+
+	SELECT TOP 1
+		@id = c.id,
+		@nome = c.nome,
+		@qtdeLocacoes = COUNT(*)
+	FROM
+		locacao l
+		join cliente c
+			on c.id = l.clienteId
+	WHERE
+		YEAR(dataLocacao) = @ano
+		AND MONTH(dataLocacao) = @mes
+	GROUP BY
+		c.id,
+		c.nome
+	ORDER BY
+		3 DESC
+
+	RETURN CONCAT(
+		'O cliente ', @id ,' – ', @nome, 
+		' foi o cliente que fez a maior quantidade de locações no ano ', @ano, ' no mês ', @mes, 
+		' com um total de ', @qtdeLocacoes, ' locações.')
+
+END
+
+SELECT dbo.FN_EXERCICIO_09(2019, 11)
