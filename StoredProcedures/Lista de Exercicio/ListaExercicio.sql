@@ -5,11 +5,12 @@ e quantidade de locações)
 */
 
 GO
-CREATE PROCEDURE QuantidadeLocacao 
-@idFilme INT 
+CREATE PROCEDURE QuantidadeLocacao (@idFilme INT)
 AS
 	SELECT DISTINCT
-		fi.id, fi.descricao, COUNT(fit.filmeId) 'Qtd Locações'
+		fi.id,
+		fi.descricao,
+		COUNT(l.fitaId) 'Qtd Locações'
 	FROM
 		locacao l
 	JOIn
@@ -21,7 +22,8 @@ AS
 	GROUP BY
 		fi.descricao, fi.id
 
-EXEC QuantidadeLocacao 1003
+drop procedure QuantidadeLocacao
+EXEC QuantidadeLocacao 2
 
 select * from filme
 
@@ -29,12 +31,13 @@ select * from filme
 cliente e quantidade de locações)
 */
 GO
-CREATE PROCEDURE LocacaoPCliente 
-@idCliente INT 
+CREATE PROCEDURE LocacaoPCliente (@idCliente INT)
 AS
 	
 	SELECT DISTINCT 
-	c.id, c.nome, COUNT(l.fitaId) as 'Locações'
+		c.id,
+		c.nome,
+		COUNT(l.fitaId) as 'Locações'
 	FROM
 		locacao l
 	JOIN
@@ -44,41 +47,41 @@ AS
 	GROUP BY
 		c.id, c.nome
 
-EXEC LocacaoPCliente 1
+EXEC LocacaoPCliente 3
 
 /*
 (03) Calcule o valor total de locações para as categorias de filme com base nas locações do
 mês/ano (mês e ano serão parâmetros IN)
 */
 GO
-CREATE PROCEDURE LocacaoPanoEmes
-@mes INT,
-@ano INT 
+CREATE PROCEDURE LocacaoPanoEmes (@mes INT, @ano INT)
 AS
 
-	IF((@mes <= 12 AND @mes >= 1))
-	 begin
-	 		SELECT DISTINCT 
-			cat.descricao, SUM(fi.valor), COUNT(fit.filmeId) 'Locações'
-		FROM
-			locacao l
-		JOIN 
-			fita fit ON fit.id = l.fitaId
-		JOIN 
-			filme fi ON fi.id = fit.filmeId
-		JOIN 
-			categoria cat ON cat.id = fi.categoriaId
-		where
-			month(l.dataLocacao) = @mes and year(l.dataLocacao) = @ano
-		GROUP BY
-			cat.descricao
-	 end
-	 else
-	  select 'Data invalida'
+	IF((@mes <= 12 AND @mes >= 1) AND (@ANO <= 9999 AND @ANO >= 1000))
+		 begin
+	 			SELECT DISTINCT 
+				cat.descricao,
+				SUM(fi.valor) AS 'Total',
+				COUNT(fit.filmeId) 'Locações'
+			FROM
+				locacao l
+				JOIN 
+					fita fit ON fit.id = l.fitaId
+				JOIN 
+					filme fi ON fi.id = fit.filmeId
+				JOIN 
+					categoria cat ON cat.id = fi.categoriaId
+			where
+				month(l.dataLocacao) = @mes and year(l.dataLocacao) = @ano
+			GROUP BY
+				cat.descricao
+		 end
+	 ELSE
+		 select 'Data invalida'
 
 DROP procedure LocacaoPanoEmes
 select * from locacao
-EXEC LocacaoPanoEmes 13, 2019
+EXEC LocacaoPanoEmes 11, 2019
 
 
 
