@@ -294,6 +294,7 @@ uma coluna. (Conceito Pivot Table)
 
 
 --Utilizando o BD LOCADORA crie as seguintes Functions:
+/*
 01) Crie uma função que informado um valor retorne uma string informando se o número é
 par ou ímpar.
 */
