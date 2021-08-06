@@ -142,8 +142,72 @@ SELECT dbo.FN_EXERCICIO_01('F')
 - estado; e
 - região.
 
+SELE
+*/
+		
+CREATE FUNCTION udfContacts()
+    RETURNS TABLE   
+AS
+RETURN(
+
+		SELECT 
+		ROW_NUMBER() OVER(ORDER BY COUNT(NF.IDNOTA)desc ) AS Rank,
+		C.IDCLIENTE AS 'Id cliente',
+		CONCAT(c.NOME, ' ', C.SOBRENOME) AS 'Nome completo',
+		c.NASCIMENTO,
+		(SELECT dbo.FN_EXERCICIO_01(C.SEXO)) AS 'Sexo',
+		e.CIDADE,
+		e.ESTADO,
+		e.REGIAO,
+		COUNT(NF.IDNOTA) AS 'Volume de compras',
+		FORMAT(SUM(nf.total), 'C', 'PT-BR') AS 'Montante Total'
+	FROM
+		nota_fiscal nf
+		JOIN
+			cliente c on nf.ID_CLIENTE = c.IDCLIENTE
+		JOIN
+			ENDERECO e on e.ID_CLIENTE = c.IDCLIENTE
+	GROUP BY
+		CONCAT(c.NOME, ' ', C.SOBRENOME),
+		C.IDCLIENTE,
+		C.SEXO,
+		C.IDCLIENTE,
+		c.NASCIMENTO,
+		e.CIDADE,
+		e.ESTADO,
+		e.REGIAO
+)
+
+SELECT * FROM udfContacts()
+
+DROP FUNCTION udfContacts
+
+/*
 3) Crie uma função que informado uma data como parâmetro retorne o seu trimestre (1º TRI, 2º TRI, 3º TRI e 4º TRI).
 
+*/
+
+CREATE FUNCTION FN_EXERCICIO_03 (@DATA DATETIME)
+RETURNS VARCHAR(50)
+AS
+BEGIN
+	DECLARE @res VARCHAR(50)
+	IF (DATEPART(QUARTER, @DATA) = 1)	
+		SET @res ='Primeiro trimestre';
+	ELSE IF DATEPART(QUARTER, @DATA) = 2	
+		SET @res ='Primeiro trimestre';
+	ELSE IF DATEPART(QUARTER, @DATA) = 3	
+		SET @res ='Terceiro trimestre';
+
+	RETURN @res
+END;
+
+SELECT dbo.FN_EXERCICIO_03(getdate())
+DROP FUNCTION FN_EXERCICIO_03
+
+
+
+/*
 4) Crie uma função (multi-statement table-valued function) que gere um relatório que apresente o ano e o trimestre, seguido das seguintes métricas:
 
 - receita total;
