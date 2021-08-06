@@ -117,9 +117,21 @@ WHERE IDCLIENTE NOT IN(
 # Funções
 
 1) Crie uma função que informado o sexo (M, F) como parâmetro retorne a sua descrição (Masculino, Feminino).
+*/
+
+
+CREATE FUNCTION FN_EXERCICIO_01(@sexo CHAR)
+RETURNS VARCHAR(10)
+AS
+BEGIN
+	RETURN IIF(@sexo  = 'F', 'Feminino', 'Masculino')
+END;
+
+SELECT dbo.FN_EXERCICIO_01('F')
 
 
 
+/*
 2) Crie uma função (multi-statement table-valued function) que apresente o volume e o montante total de compras com as informações do cliente (parâmetro de entrada, código do cliente), sendo:
 
 - código;
