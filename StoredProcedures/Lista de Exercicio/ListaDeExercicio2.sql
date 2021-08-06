@@ -209,7 +209,6 @@ DROP FUNCTION FN_EXERCICIO_03
 
 /*
 4) Crie uma função (multi-statement table-valued function) que gere um relatório que apresente o ano e o trimestre, seguido das seguintes métricas:
-
 - receita total;
 - custo total;
 - lucro total; e
@@ -218,16 +217,55 @@ DROP FUNCTION FN_EXERCICIO_03
 Fórmula = (Lucro / Receita total) * 100
 	
 Exemplo: 
-	
+(LUCRO = RECEITA_TOTAL - CUSTOS)
+Fórmula = (Lucro / Receita total) * 100
+
 - Receita total  : R$ 20.000
 - Custos         : R$ 13.000
 - Lucro          : R$ 20.000 - R$ 13.000 = R$ 7.000
 - Margem de Lucro: R$ 7.000 / R$ 20.000  = 0.35 x 100 = 35%
+*/
 
+		SELECT
+			CASE DATEPART(QUARTER, nf.DATA) 
+				 WHEN 1 THEN '1 Trimestre'   
+				 WHEN 2 THEN '2 Trimestre' 
+				 WHEN 3 THEN '3 Trimestre' 
+			END AS TRI,
+			FORMAT(SUM((ITN.TOTAL)), 'C', 'PT-BR') AS 'Receita total',
+			FORMAT(sum((P.CUSTO_MEDIO * ITN.QUANTIDADE)), 'C', 'PT-BR') AS CUSTO,
+			FORMAT(SUM((itN.TOTAL)) - sum((P.CUSTO_MEDIO * ITN.QUANTIDADE)), 'C', 'PT-BR') AS LUCRO,
+			(((SUM((ITN.TOTAL)) - sum((P.CUSTO_MEDIO * ITN.QUANTIDADE))) / SUM((ITN.TOTAL))) * 100)
+		FROM 
+			NOTA_FISCAL nF
+		JOIN
+			ITEM_NOTA ITN ON ITN.ID_NOTA_FISCAL = NF.IDNOTA
+		JOIN
+			PRODUTO P ON P.IDPRODUTO = ITN.ID_PRODUTO
+		WHERE 
+			DATEPART(QUARTER, nf.DATA) = 1 AND YEAR(NF.DATA) = 2015			
+		GROUP BY
+			DATEPART(QUARTER, nf.DATA)
+
+/*
 A função deverá receber como parâmetro de entrada o ano e a percentual da margem de lucro e deverá retornar somente os anos e trimestres (utilize a função criada no exercício 03) cuja a lucratividade tenha alcançado um resultado superior ou igual a margem de lucro informada.
 
 5) Crie uma função que informado duas datas (data inicial, data final) como parâmetro retorne a diferença em dias.
+*/
+CREATE FUNCTION FN_DATA_MINUTOS(@Day INT, @InicialDate DATETIME, @FinalDate DATETIME)
+RETURNS @TABLE TABLE(DATA DATETIME)
+AS
+BEGIN
 
+	WHILE @InicialDate <= @FinalDate
+	BEGIN
+		INSERT INTO @TABLE VALUES (@InicialDate)
+		SET @InicialDate = DATEADD(DAY, @Day, @InicialDate)
+	END
+	RETURN 
+END
+
+/*
 6) Crie uma função (multi-statement table-valued function) que informado o código do cliente apresente a matriz RFM (Recência, Frequência e Valor Monetário) do mesmo.
 
 Tempo para retorno (R) - dias desde a última compra (utilize a função criada no exercício 05)
