@@ -4,83 +4,88 @@
 
 1) Crie um procedimento que apresente o volume e o montante total de vendas por região e trimestre. */
 
+GO
+CREATE PROCEDURE Montante 
+AS
+BEGIN
+	SELECT
+		e.REGIAO, 
+		FORMAT(SUM(nf.total), 'C', 'PT-BR') AS 'Montante Total',
+		COUNT(distinct NF.IDNOTA) AS 'Volume de vendas',
+		CASE DATEPART(QUARTER, nf.DATA) 
+			 WHEN 1 THEN '1 Trimestre'   
+			 WHEN 2 THEN '2 Trimestre' 
+			 WHEN 3 THEN '3 Trimestre' 
+		END as 'Trimestre'
+	FROM
+		nota_fiscal nf
+		JOIN
+			cliente c on nf.ID_CLIENTE = c.IDCLIENTE
+		JOIN
+			endereco e on e.ID_CLIENTE = c.IDCLIENTE
+	WHERE 
+		DATEPART(QUARTER, nf.DATA) != 4
+	GROUP BY
+		e.REGIAO,
+		DATEPART(QUARTER, nf.DATA)
+	ORDER BY 
+		 4
+END;
 
-SELECT
-	e.REGIAO, 
-	FORMAT(SUM(nf.total), 'C', 'PT-BR') AS 'Montante Total',
-	COUNT(distinct NF.IDNOTA) AS 'Volume de vendas',
-	CASE DATEPART(QUARTER, nf.DATA) 
-		 WHEN 1 THEN '1 Trimestre'   
-		 WHEN 2 THEN '2 Trimestre' 
-		 WHEN 3 THEN '3 Trimestre' 
-	END 
-FROM
-	nota_fiscal nf
-	JOIN
-		cliente c on nf.ID_CLIENTE = c.IDCLIENTE
-	JOIN
-		endereco e on e.ID_CLIENTE = c.IDCLIENTE
-WHERE 
-	DATEPART(QUARTER, nf.DATA) != 4
-GROUP BY
-	e.REGIAO,
-	DATEPART(QUARTER, nf.DATA)
-ORDER BY 
-	 4
-
+EXEC Montante
 
 /*
 
 2) Crie um procedimento que apresente os top 10 clientes em volume de compras.
 */
-
+GO
+CREATE PROCEDURE Top10EmVolume 
+AS
+BEGIN
 	SELECT TOP 10
 		ROW_NUMBER() OVER(ORDER BY COUNT(NF.IDNOTA)desc ) AS Rank,
 		COUNT(NF.IDNOTA) AS 'Volume de compras',
-		c.NOME
+		CONCAT(c.NOME, ' ', C.SOBRENOME) AS 'Nome completo'
+
 	FROM
 		nota_fiscal nf
 		JOIN
 			cliente c on nf.ID_CLIENTE = c.IDCLIENTE
 	GROUP BY
-		c.NOME
+		CONCAT(c.NOME, ' ', C.SOBRENOME)
 
-
+end;
+exec Top10EmVolume
+drop procedure Top10EmVolume
 /*
 3) Crie um procedimento que mostre os clientes que não realizaram nenhuma compra.
 */
-
-SELECT 
-	NOME
-FROM
-	CLIENTE
-WHERE IDCLIENTE NOT IN(
+GO
+CREATE PROCEDURE ClientesSemCompras 
+AS
+BEGIN
 	SELECT 
-		NF.ID_CLIENTE
+		CONCAT(NOME, ' ', SOBRENOME) AS 'Nome completo'
 	FROM
-		NOTA_FISCAL NF
-	JOIN
-		CLIENTE C ON C.IDCLIENTE = NF.ID_CLIENTE)
-
+		CLIENTE
+	WHERE IDCLIENTE NOT IN(
+		SELECT 
+			NF.ID_CLIENTE
+		FROM
+			NOTA_FISCAL NF
+		JOIN
+			CLIENTE C ON C.IDCLIENTE = NF.ID_CLIENTE)
+end;
+EXEC ClientesSemCompras
+drop procedure ClientesSemCompras
 
 /*
 4) Crie um procedimento que apresente o faturamento e o faturamento acumulado por ano.
 */
-
-	select * from NOTA_FISCAL
-
-
-
-
-	
-	select
-		SUM(total)
-	from 
-		NOTA_FISCAL
-	GROUP BY
-		YEAR(DATA)
-
-
+GO
+CREATE PROCEDURE FaturamentoPAno 
+AS
+BEGIN
 	SELECT
 		YEAR(n.DATA) as mes,
 		FORMAT(SUM(n.total), 'C', 'PT-BR') AS 'Montante Total',
@@ -96,24 +101,38 @@ WHERE IDCLIENTE NOT IN(
 			NOTA_FISCAL n
 		GROUP BY
 			YEAR(n.DATA)
+END;
 
+EXEC FaturamentoPAno
 
 
 /*
 5) Crie um procedimento que apresente os cinco produtos mais caros por categoria (parâmetro de entrada) de produto.
 */
 
-
+GO
+CREATE PROCEDURE Top5ProdutosPCategoria (@NomeCategoria VARCHAR(30))
+AS
+BEGIN
 	SELECT top 5
 		ROW_NUMBER() OVER(ORDER BY max(valor) desc ) AS Rank,
-		P.PRODUTO, C.NOME, max(valor)
+		P.PRODUTO,
+		C.NOME,
+		FORMAT(max(valor), 'C', 'PT-BR') AS 'Valor'
+
 	FROM
 		PRODUTO P
 	JOIN
-	 CATEGORIA C ON C.IDCATEGORIA = P.ID_CATEGORIA
-	 group by P.PRODUTO, C.NOME
-
+		 CATEGORIA C ON C.IDCATEGORIA = P.ID_CATEGORIA
+	WHERE C.NOME = @NomeCategoria
+	GROUP BY P.PRODUTO, C.NOME
+END;
+exec Top5ProdutosPCategoria 'LIVROS'
+SELECT MAX(VALOR) FROM PRODUTO
+SELECT * FROM CATEGORIA
 /*
+
+
 # Funções
 
 1) Crie uma função que informado o sexo (M, F) como parâmetro retorne a sua descrição (Masculino, Feminino).
@@ -145,7 +164,7 @@ SELECT dbo.FN_EXERCICIO_01('F')
 SELE
 */
 		
-CREATE FUNCTION udfContacts()
+CREATE FUNCTION udfContacts(@IDCliente int)
     RETURNS TABLE   
 AS
 RETURN(
@@ -154,7 +173,7 @@ RETURN(
 		ROW_NUMBER() OVER(ORDER BY COUNT(NF.IDNOTA)desc ) AS Rank,
 		C.IDCLIENTE AS 'Id cliente',
 		CONCAT(c.NOME, ' ', C.SOBRENOME) AS 'Nome completo',
-		c.NASCIMENTO,
+		CONVERT(VARCHAR, c.NASCIMENTO, 103) AS 'Nascimento',
 		(SELECT dbo.FN_EXERCICIO_01(C.SEXO)) AS 'Sexo',
 		e.CIDADE,
 		e.ESTADO,
@@ -167,6 +186,8 @@ RETURN(
 			cliente c on nf.ID_CLIENTE = c.IDCLIENTE
 		JOIN
 			ENDERECO e on e.ID_CLIENTE = c.IDCLIENTE
+	WHERE
+		C.IDCLIENTE = @IDCliente
 	GROUP BY
 		CONCAT(c.NOME, ' ', C.SOBRENOME),
 		C.IDCLIENTE,
@@ -178,7 +199,7 @@ RETURN(
 		e.REGIAO
 )
 
-SELECT * FROM udfContacts()
+SELECT * FROM udfContacts(2)
 
 DROP FUNCTION udfContacts
 
@@ -225,7 +246,10 @@ Fórmula = (Lucro / Receita total) * 100
 - Lucro          : R$ 20.000 - R$ 13.000 = R$ 7.000
 - Margem de Lucro: R$ 7.000 / R$ 20.000  = 0.35 x 100 = 35%
 */
-
+CREATE FUNCTION Relatorio()
+RETURNS TABLE
+AS
+RETURN(
 		SELECT
 			CASE DATEPART(QUARTER, nf.DATA) 
 				 WHEN 1 THEN '1 Trimestre'   
@@ -235,7 +259,7 @@ Fórmula = (Lucro / Receita total) * 100
 			FORMAT(SUM((ITN.TOTAL)), 'C', 'PT-BR') AS 'Receita total',
 			FORMAT(sum((P.CUSTO_MEDIO * ITN.QUANTIDADE)), 'C', 'PT-BR') AS CUSTO,
 			FORMAT(SUM((itN.TOTAL)) - sum((P.CUSTO_MEDIO * ITN.QUANTIDADE)), 'C', 'PT-BR') AS LUCRO,
-			(((SUM((ITN.TOTAL)) - sum((P.CUSTO_MEDIO * ITN.QUANTIDADE))) / SUM((ITN.TOTAL))) * 100)
+			(((SUM((ITN.TOTAL)) - sum((P.CUSTO_MEDIO * ITN.QUANTIDADE))) / SUM((ITN.TOTAL))) * 100) AS MARGEM
 		FROM 
 			NOTA_FISCAL nF
 		JOIN
@@ -243,27 +267,29 @@ Fórmula = (Lucro / Receita total) * 100
 		JOIN
 			PRODUTO P ON P.IDPRODUTO = ITN.ID_PRODUTO
 		WHERE 
-			DATEPART(QUARTER, nf.DATA) = 1 AND YEAR(NF.DATA) = 2015			
+			DATEPART(QUARTER, nf.DATA) != 4 		
 		GROUP BY
 			DATEPART(QUARTER, nf.DATA)
-
+	
+			)
+DROP FUNCTION Relatorio
+SELECT * FROM Relatorio()
 /*
 A função deverá receber como parâmetro de entrada o ano e a percentual da margem de lucro e deverá retornar somente os anos e trimestres (utilize a função criada no exercício 03) cuja a lucratividade tenha alcançado um resultado superior ou igual a margem de lucro informada.
 
 5) Crie uma função que informado duas datas (data inicial, data final) como parâmetro retorne a diferença em dias.
 */
-CREATE FUNCTION FN_DATA_MINUTOS(@Day INT, @InicialDate DATETIME, @FinalDate DATETIME)
-RETURNS @TABLE TABLE(DATA DATETIME)
+CREATE FUNCTION TESTE( @InicialDate DATETIME, @FinalDate DATETIME)
+RETURNS int
 AS
 BEGIN
-
-	WHILE @InicialDate <= @FinalDate
-	BEGIN
-		INSERT INTO @TABLE VALUES (@InicialDate)
-		SET @InicialDate = DATEADD(DAY, @Day, @InicialDate)
-	END
-	RETURN 
+	RETURN DATEDIFF(DAY,  @InicialDate, @FinalDate)
 END
+
+DROP FUNCTION TESTE
+
+SELECT dbo.TESTE ( '28-07-2021 19:00:00.000', GETDATE())
+
 
 /*
 6) Crie uma função (multi-statement table-valued function) que informado o código do cliente apresente a matriz RFM (Recência, Frequência e Valor Monetário) do mesmo.
@@ -272,3 +298,28 @@ Tempo para retorno (R) - dias desde a última compra (utilize a função criada no 
 Frequência (F) - Número total de compras
 Valor monetário (M) - quanto dinheiro total o cliente gastou.
 */
+
+CREATE FUNCTION RFMPcliente(@IDCliente INT)
+RETURNS TABLE
+AS
+RETURN(
+	SELECT 
+		 CONCAT(c.NOME, ' ', C.SOBRENOME) AS 'Nome completo',
+		 dbo.TESTE(MAX(NF.DATA), GETDATE()) AS 'Tempo para retorno',
+		 COUNT(NF.IDNOTA) 'Frequencia',
+		 FORMAT(SUM((nf.TOTAL)), 'C', 'PT-BR') AS 'Total gasto'
+	FROM 
+		NOTA_FISCAL NF 
+	JOIN 
+		CLIENTE C ON C.IDCLIENTE = NF.ID_CLIENTE
+	WHERE 
+		C.IDCLIENTE = @IDCliente
+	GROUP BY
+		CONCAT(c.NOME, ' ', C.SOBRENOME)
+)
+
+
+
+DROP FUNCTION dbo.COSTUMER_RFM
+select  * from dbo.RFMPcliente(1)
+
