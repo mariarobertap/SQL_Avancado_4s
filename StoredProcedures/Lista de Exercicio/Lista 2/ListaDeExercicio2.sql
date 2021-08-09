@@ -216,11 +216,9 @@ BEGIN
 	IF (DATEPART(QUARTER, @DATA) = 1)	
 		SET @res ='Primeiro trimestre';
 	ELSE IF DATEPART(QUARTER, @DATA) = 2	
-		SET @res ='Segundo trimestre';
+		SET @res ='Primeiro trimestre';
 	ELSE IF DATEPART(QUARTER, @DATA) = 3	
 		SET @res ='Terceiro trimestre';
-	ELSE IF DATEPART(QUARTER, @DATA) = 4	
-		SET @res ='Quarto trimestre';
 
 	RETURN @res
 END;
@@ -247,22 +245,17 @@ Fórmula = (Lucro / Receita total) * 100
 - Custos         : R$ 13.000
 - Lucro          : R$ 20.000 - R$ 13.000 = R$ 7.000
 - Margem de Lucro: R$ 7.000 / R$ 20.000  = 0.35 x 100 = 35%
-
-A função deverá receber como parâmetro de entrada o ano e a percentual
-da margem de lucro e deverá retornar somente os anos
-e trimestres (utilize a função criada no exercício 03) 
-cuja a lucratividade tenha alcançado um resultado superior ou igual a margem de lucro informada
-
 */
-
-SELECT * FROM NOTA_FISCAL
-
-CREATE FUNCTION Relatorio(@Ano int, @Margem int)
+CREATE FUNCTION Relatorio()
 RETURNS TABLE
 AS
 RETURN(
 		SELECT
-			dbo.FN_EXERCICIO_03(nf.DATA) as 'Trimestre',
+			CASE DATEPART(QUARTER, nf.DATA) 
+				 WHEN 1 THEN '1 Trimestre'   
+				 WHEN 2 THEN '2 Trimestre' 
+				 WHEN 3 THEN '3 Trimestre' 
+			END AS TRI,
 			FORMAT(SUM((ITN.TOTAL)), 'C', 'PT-BR') AS 'Receita total',
 			FORMAT(sum((P.CUSTO_MEDIO * ITN.QUANTIDADE)), 'C', 'PT-BR') AS CUSTO,
 			FORMAT(SUM((itN.TOTAL)) - sum((P.CUSTO_MEDIO * ITN.QUANTIDADE)), 'C', 'PT-BR') AS LUCRO,
@@ -274,15 +267,13 @@ RETURN(
 		JOIN
 			PRODUTO P ON P.IDPRODUTO = ITN.ID_PRODUTO
 		WHERE 
-			year(nf.DATA) = 2015 
+			DATEPART(QUARTER, nf.DATA) != 4 		
 		GROUP BY
-			dbo.FN_EXERCICIO_03(nf.DATA)
-		HAVING 
-			(((SUM((ITN.TOTAL)) - sum((P.CUSTO_MEDIO * ITN.QUANTIDADE))) / SUM((ITN.TOTAL))) * 100)  >= @Margem
+			DATEPART(QUARTER, nf.DATA)
 	
 			)
 DROP FUNCTION Relatorio
-SELECT * FROM Relatorio(2015, 20)
+SELECT * FROM Relatorio()
 /*
 A função deverá receber como parâmetro de entrada o ano e a percentual da margem de lucro e deverá retornar somente os anos e trimestres (utilize a função criada no exercício 03) cuja a lucratividade tenha alcançado um resultado superior ou igual a margem de lucro informada.
 
