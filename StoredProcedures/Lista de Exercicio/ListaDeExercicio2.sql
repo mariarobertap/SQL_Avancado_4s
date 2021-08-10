@@ -16,22 +16,22 @@ BEGIN
 			 WHEN 1 THEN '1 Trimestre'   
 			 WHEN 2 THEN '2 Trimestre' 
 			 WHEN 3 THEN '3 Trimestre' 
+			 WHEN 4 THEN '4 Trimestre' 
 		END as 'Trimestre'
 	FROM
 		nota_fiscal nf
 		JOIN
-			cliente c on nf.ID_CLIENTE = c.IDCLIENTE
+			cliente c on c.IDCLIENTE = nf.ID_CLIENTE
 		JOIN
 			endereco e on e.ID_CLIENTE = c.IDCLIENTE
-	WHERE 
-		DATEPART(QUARTER, nf.DATA) != 4
 	GROUP BY
 		e.REGIAO,
 		DATEPART(QUARTER, nf.DATA)
 	ORDER BY 
-		 4
+		 1, 4
 END;
 
+DROP PROCEDURE Montante
 EXEC Montante
 
 /*
@@ -44,15 +44,20 @@ AS
 BEGIN
 	SELECT TOP 10
 		ROW_NUMBER() OVER(ORDER BY COUNT(NF.IDNOTA)desc ) AS Rank,
-		COUNT(NF.IDNOTA) AS 'Volume de compras',
-		CONCAT(c.NOME, ' ', C.SOBRENOME) AS 'Nome completo'
+		C.IDCLIENTE,
+		CONCAT(C.NOME, ' ', C.SOBRENOME),
+		COUNT(NF.IDNOTA) AS 'Volume de compras'
 
 	FROM
-		nota_fiscal nf
+		NOTA_FISCAL NF
 		JOIN
-			cliente c on nf.ID_CLIENTE = c.IDCLIENTE
+			CLIENTE C on  C.IDCLIENTE = NF.ID_CLIENTE
 	GROUP BY
-		CONCAT(c.NOME, ' ', C.SOBRENOME)
+		C.NOME,
+		C.IDCLIENTE,
+		C.SOBRENOME
+	ORDER BY
+		COUNT(NF.IDNOTA) DESC
 
 end;
 exec Top10EmVolume
@@ -64,18 +69,22 @@ GO
 CREATE PROCEDURE ClientesSemCompras 
 AS
 BEGIN
+
 	SELECT 
 		CONCAT(NOME, ' ', SOBRENOME) AS 'Nome completo'
 	FROM
 		CLIENTE
-	WHERE IDCLIENTE NOT IN(
-		SELECT 
-			NF.ID_CLIENTE
-		FROM
-			NOTA_FISCAL NF
-		JOIN
-			CLIENTE C ON C.IDCLIENTE = NF.ID_CLIENTE)
-end;
+	WHERE
+		IDCLIENTE NOT IN(
+			SELECT 
+				NF.ID_CLIENTE
+			FROM
+				NOTA_FISCAL NF
+			JOIN
+				CLIENTE C ON C.IDCLIENTE = NF.ID_CLIENTE
+		)
+END;
+
 EXEC ClientesSemCompras
 drop procedure ClientesSemCompras
 
@@ -87,22 +96,22 @@ CREATE PROCEDURE FaturamentoPAno
 AS
 BEGIN
 	SELECT
-		YEAR(n.DATA) as mes,
-		FORMAT(SUM(n.total), 'C', 'PT-BR') AS 'Montante Total',
-		vlrAcumulado = (
-			SELECT 
-				FORMAT(SUM(ns.total), 'C', 'PT-BR') AS 'Montante Total'
-			FROM
-				NOTA_FISCAL ns
-
-			WHERE YEAR(ns.DATA) <= YEAR(N.DATA)
-			)
+		YEAR(n.DATA) as 'Mes',
+		FORMAT(SUM(n.total), 'C', 'PT-BR') AS 'Faturamento',
+		'Faturamento Acumulado' = (
+				SELECT 
+					FORMAT(SUM(ns.total), 'C', 'PT-BR') AS 'Montante Total'
+				FROM
+					NOTA_FISCAL ns
+				WHERE YEAR(ns.DATA) <= YEAR(N.DATA)
+			   )
 		FROM 
-			NOTA_FISCAL n
+			NOTA_FISCAL N
 		GROUP BY
-			YEAR(n.DATA)
+			YEAR(N.DATA)
 END;
 
+DROP PROCEDURE FaturamentoPAno
 EXEC FaturamentoPAno
 
 
@@ -111,25 +120,31 @@ EXEC FaturamentoPAno
 */
 
 GO
-CREATE PROCEDURE Top5ProdutosPCategoria (@NomeCategoria VARCHAR(30))
+CREATE PROCEDURE Top5ProdutosPCategoria (@NomeCategoria VARCHAR(50))
 AS
 BEGIN
-	SELECT top 5
-		ROW_NUMBER() OVER(ORDER BY max(valor) desc ) AS Rank,
+	SELECT TOP 5
+		ROW_NUMBER() OVER(ORDER BY max(P.VALOR) desc ) AS Rank,
 		P.PRODUTO,
 		C.NOME,
-		FORMAT(max(valor), 'C', 'PT-BR') AS 'Valor'
+		FORMAT(max(P.VALOR), 'C', 'PT-BR') AS 'Valor'
 
 	FROM
 		PRODUTO P
-	JOIN
-		 CATEGORIA C ON C.IDCATEGORIA = P.ID_CATEGORIA
-	WHERE C.NOME = @NomeCategoria
-	GROUP BY P.PRODUTO, C.NOME
+		JOIN
+			 CATEGORIA C ON C.IDCATEGORIA = P.ID_CATEGORIA
+	WHERE 
+		C.NOME = @NomeCategoria
+	GROUP BY
+		P.PRODUTO, 
+		C.NOME
+		
 END;
-exec Top5ProdutosPCategoria 'LIVROS'
-SELECT MAX(VALOR) FROM PRODUTO
-SELECT * FROM CATEGORIA
+
+DROP PROCEDURE Top5ProdutosPCategoria
+EXEC Top5ProdutosPCategoria 'LIVROS'
+
+
 /*
 
 
@@ -183,7 +198,7 @@ RETURN(
 	FROM
 		nota_fiscal nf
 		JOIN
-			cliente c on nf.ID_CLIENTE = c.IDCLIENTE
+			cliente c on  c.IDCLIENTE = nf.ID_CLIENTE
 		JOIN
 			ENDERECO e on e.ID_CLIENTE = c.IDCLIENTE
 	WHERE
@@ -313,6 +328,7 @@ RETURNS TABLE
 AS
 RETURN(
 	SELECT 
+		 C.IDCLIENTE,
 		 CONCAT(c.NOME, ' ', C.SOBRENOME) AS 'Nome completo',
 		 dbo.TESTE(MAX(NF.DATA), GETDATE()) AS 'Tempo para retorno',
 		 COUNT(NF.IDNOTA) 'Frequencia',
@@ -324,11 +340,11 @@ RETURN(
 	WHERE 
 		C.IDCLIENTE = @IDCliente
 	GROUP BY
-		CONCAT(c.NOME, ' ', C.SOBRENOME)
+		CONCAT(c.NOME, ' ', C.SOBRENOME), C.IDCLIENTE
 )
 
 
 
-DROP FUNCTION dbo.COSTUMER_RFM
+DROP FUNCTION dbo.RFMPcliente
 select  * from dbo.RFMPcliente(1)
 
