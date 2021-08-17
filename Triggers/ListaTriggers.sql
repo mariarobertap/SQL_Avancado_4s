@@ -97,3 +97,69 @@ END
 
 --4. Crie um TRIGGER para criar um log quando não existe a quantidade do
 --ITEMPEDIDO em estoque.
+
+--6. Crie um TRIGGER para criar um log quando um ITEMPEDIDO for removido.
+
+CREATE TRIGGER TGR_LOG_TABELA_DELETE
+ON itempedido
+AFTER DELETE
+AS
+BEGIN
+	
+	INSERT INTO log
+		(codlog, data, descricao)
+	SELECT
+		codpedido, getdate(), 'Delete [itempedido table]'
+	FROM
+		deleted
+END
+select * from log
+select * from itempedido
+
+--8. Crie um TRIGGER para NÃO deixar valores negativos serem INSERIDOS em
+--ITEMPEDIDO, o valor mínimo é “0”.
+
+CREATE TRIGGER TGR_LOG_TABELA_INSERT
+ON itempedido
+AFTER INSERT
+AS
+BEGIN
+	
+	DECLARE @VALOR DECIMAL(10,2)
+
+	SELECT 
+		@VALOR = valorunitario
+	FROM 
+		inserted
+
+
+	IF(@VALOR < 0)
+		ROLLBACK TRANSACTION
+
+END
+
+SELECT * FROM itempedido
+INSERT INTO itempedido VALUES (7, 7, 1, 2, 2)
+
+--10. Crie um TRIGGER para não permitir quantidade negativa na tabela ITEMPEDIDO.
+CREATE TRIGGER TGR_LOG_TABELA_INSERT
+ON itempedido
+AFTER INSERT
+AS
+BEGIN
+	
+	DECLARE @QUANTIDADE INT
+
+	SELECT 
+		@QUANTIDADE = quantidade
+	FROM 
+		inserted
+
+
+	IF(@QUANTIDADE < 0)
+		ROLLBACK TRANSACTION
+
+END
+
+--7. Crie um TRIGGER para criar um log quando o valor total do pedido for maior que
+--R$ 1.000,00.
