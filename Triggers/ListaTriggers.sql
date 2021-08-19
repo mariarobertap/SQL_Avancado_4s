@@ -48,7 +48,7 @@ BEGIN
 	FROM
 		inserted
 	
-	update produto set quantidade  = quantidade - @QTD WHERE codproduto = @ID;
+	update produto set quantidade  = (quantidade - @QTD) WHERE codproduto = @ID;
 END
 
 DROP TRIGGER TGR_LOG_TABELA_UPDATE
