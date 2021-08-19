@@ -53,9 +53,9 @@ END
 
 DROP TRIGGER TGR_LOG_TABELA_UPDATE
 
---Crie um TRIGGER para criar um log dos CLIENTES modificados.
+--2 Crie um TRIGGER para criar um log dos CLIENTES modificados.
 
-CREATE TRIGGER TGR_LOG_TABELA_UPDATE
+CREATE TRIGGER TGR_LOG_CLIENTES_UPDATE
 ON cliente
 AFTER UPDATE
 AS
@@ -98,9 +98,72 @@ END
 --4. Crie um TRIGGER para criar um log quando não existe a quantidade do
 --ITEMPEDIDO em estoque.
 
+CREATE TRIGGER TGR_LOG_ITEM_EM_FALTA
+ON itempedido
+AFTER INSERT
+AS
+BEGIN
+	DECLARE @QTD INT
+
+	SELECT 
+		@QTD = (ins.quantidade - p.quantidade)
+	FROM 
+		inserted ins
+	JOIN 
+		produto p ON p.codproduto = ins.codproduto 
+
+	if(@QTD <= 0)
+	begin
+		INSERT INTO log
+			(codlog, data, descricao)
+		SELECT
+			codpedido, getdate(), 'Sem estoque [itempedido table]'
+		FROM
+			inserted
+	end
+END
+
+
+
+--5. Crie um TRIGGER para criar uma requisição de REQUISICAO_COMPRA quanto o
+--estoque atingir 50% da venda mensal.
+
+select * from itempedido
+select * from produto
+select * from requisicao_compra
+drop trigger TGR_teste
+CREATE TRIGGER TGR_teste
+ON itempedido
+AFTER INSERT
+AS
+BEGIN
+	DECLARE @IDProduto int
+	DECLARE @QuantidadeP int
+
+	SELECT 
+		@IDProduto = p.codproduto,
+		@QuantidadeP = p.quantidade
+	FROM
+		pedido pd
+		JOIN itempedido itp 
+			on itp.codpedido = pd.codpedido
+		JOIN produto p
+			on p.codproduto = itp.codproduto
+	WHERE
+		(p.quantidade - itp.quantidade) = P.quantidade/2 
+	GROUP BY 
+		MONTH(pd.datapedido), p.codproduto, p.quantidade
+
+	IF(@IDProduto > 0)
+	INSERT INTO requisicao_compra (codproduto, data, quantidade) values ( @IDProduto, GETDATE(), (@QuantidadeP/2))
+
+END
+
+select * from itempedido
+select * from requisicao_compra
 --6. Crie um TRIGGER para criar um log quando um ITEMPEDIDO for removido.
 
-CREATE TRIGGER TGR_LOG_TABELA_DELETE
+CREATE TRIGGER TGR_LOG_ITEM_DELETADO
 ON itempedido
 AFTER DELETE
 AS
@@ -118,8 +181,7 @@ select * from itempedido
 
 --8. Crie um TRIGGER para NÃO deixar valores negativos serem INSERIDOS em
 --ITEMPEDIDO, o valor mínimo é “0”.
-
-CREATE TRIGGER TGR_LOG_TABELA_INSERT
+CREATE TRIGGER TGR_IMPEDIR_VALOR_NEGATIVO
 ON itempedido
 AFTER INSERT
 AS
@@ -139,10 +201,10 @@ BEGIN
 END
 
 SELECT * FROM itempedido
-INSERT INTO itempedido VALUES (7, 7, 1, 2, 2)
+INSERT INTO itempedido VALUES (7, 11, 1, 2, 2)
 
 --10. Crie um TRIGGER para não permitir quantidade negativa na tabela ITEMPEDIDO.
-CREATE TRIGGER TGR_LOG_TABELA_INSERT
+CREATE TRIGGER TGR_IMPEDIR_QUANTIDADE_NEGATIVA
 ON itempedido
 AFTER INSERT
 AS
@@ -163,3 +225,65 @@ END
 
 --7. Crie um TRIGGER para criar um log quando o valor total do pedido for maior que
 --R$ 1.000,00.
+
+
+CREATE TRIGGER TGR_LOG_PEDIDO_MAIOR_1000
+ON pedido
+AFTER INSERT
+AS
+BEGIN
+	
+	DECLARE @IDPedido INT
+	DECLARE @Valor DECIMAL(10, 2)
+	DECLARE @Descricao varchar(50)
+
+	SELECT 
+		@Valor = valortotal,
+		@IDPedido = codpedido
+	FROM 
+		inserted
+
+
+	IF(@Valor > 1000)
+	BEGIN
+		set @Descricao =  CONCAT('Pedido > 1000 ID:', @IDPedido)
+		INSERT INTO log
+		(codlog, data, descricao)
+		SELECT
+			codpedido, getdate(), @Descricao
+		FROM
+			inserted
+	END
+
+END
+DROP TRIGGER TGR_LOG_PEDIDO_MAIOR_1000
+SELECT * FROM pedido
+
+INSERT INTO pedido  VALUES (10, 7, GETDATE(), 8, 1001)
+SELECT * FROM LOG
+
+
+--9. Crie um TRIGGER que NÃO permita que uma PESSOA com data de nascimento
+--anterior à data atual seja inserida ou atualizada.
+
+CREATE TRIGGER TGR_CLIENTE_BDAY_MAIOR_DATA_ATUAL
+ON cliente
+AFTER INSERT, UPDATE
+AS
+BEGIN
+	
+	DECLARE @BDay DATETIME
+
+
+	SELECT 
+		@BDay = datanascimento
+	FROM 
+		inserted
+
+
+	IF(@BDay > GETDATE())
+		ROLLBACK TRANSACTION 
+
+END
+
+select * from cliente
