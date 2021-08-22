@@ -150,14 +150,18 @@ BEGIN
 		JOIN produto p
 			on p.codproduto = itp.codproduto
 	WHERE
-		(p.quantidade - itp.quantidade) = P.quantidade/2 
+		(p.quantidade - itp.quantidade) <= P.quantidade/2 
 	GROUP BY 
 		MONTH(pd.datapedido), p.codproduto, p.quantidade
 
 	IF(@IDProduto > 0)
-	INSERT INTO requisicao_compra (codproduto, data, quantidade) values ( @IDProduto, GETDATE(), (@QuantidadeP/2))
+	INSERT INTO requisicao_compra (codproduto, data, quantidade) values ( @IDProduto, GETDATE(), 1)
 
 END
+
+
+drop trigger TGR_teste
+
 
 select * from itempedido
 select * from requisicao_compra
@@ -287,3 +291,130 @@ BEGIN
 END
 
 select * from cliente
+---------------------------------------------------------------------------
+/*
+1. Crie um TRIGGER para baixar o estoque de um produto quando ele for vendido.
+*/
+CREATE OR ALTER TRIGGER TGRE_EX01
+ON itempedido
+AFTER INSERT 
+AS
+BEGIN
+	UPDATE produto SET 
+		produto.quantidade = produto.quantidade - i.quantidade
+	FROM
+		inserted i
+	WHERE
+		produto.codproduto = i.codproduto
+END;
+GO
+
+SELECT * FROM pedido
+SELECT * FROM itempedido
+SELECT * FROM produto WHERE codproduto IN(1, 3)
+
+INSERT INTO pedido VALUES(7, 1, '2021-08-18', '00007', 453.00)
+INSERT INTO itempedido VALUES(7, 1, 10.90, 1, 1),(7, 2, 25.90, 1, 3)
+
+/*
+2. Crie um TRIGGER para criar um log dos CLIENTES modificados.
+*/
+CREATE OR ALTER TRIGGER TGRE_EX02
+ON cliente
+AFTER UPDATE
+AS
+BEGIN
+	INSERT INTO
+		log
+	SELECT
+		(SELECT ISNULL(MAX(codlog) + 1, 1) FROM log),
+		GETDATE(),
+		CONCAT('Ação: Update | Cliente ID: ', i.codcliente) 
+	FROM
+		inserted i
+END;
+GO
+
+SELECT * FROM log
+SELECT * FROM cliente
+
+UPDATE cliente SET cpf = '12313745517' WHERE codcliente = 2
+
+/*
+3. Crie um TRIGGER para criar um log de PRODUTOS atualizados.
+*/
+CREATE OR ALTER TRIGGER TGRE_EX03
+ON produto
+AFTER UPDATE
+AS
+BEGIN
+	INSERT INTO
+		log
+	SELECT
+		(SELECT ISNULL(MAX(codlog) + 1, 1) FROM log),
+		GETDATE(),
+		CONCAT('Ação: Update | Produto ID: ', i.codproduto) 
+	FROM
+		inserted i
+END;
+GO
+
+SELECT * FROM log
+SELECT * FROM produto
+
+UPDATE produto SET descricao = 'Mouse' WHERE codproduto = 1
+
+/*
+4. Crie um TRIGGER para criar um log quando não existe a quantidade do ITEMPEDIDO em estoque.
+*/
+CREATE OR ALTER TRIGGER TRGR_EX04
+ON itempedido
+FOR INSERT
+AS
+BEGIN
+	DECLARE @quantidade INT,
+			@codproduto INT,
+			@estoque INT,
+			@descricao VARCHAR(255)
+
+	SELECT
+		@quantidade = i.quantidade,
+		@codproduto = i.codproduto,
+		@estoque = p.quantidade
+	FROM	
+		inserted i
+		JOIN produto p
+			ON p.codproduto = i.codproduto
+	
+	IF @estoque < @quantidade
+	BEGIN
+		SET @descricao = CONCAT('Produto sem estoque suficiente. ', @codproduto)
+		ROLLBACK TRANSACTION
+		EXEC SP_INSERE_LOG @descricao
+		RETURN
+	END
+
+END;
+GO
+
+SELECT * FROM pedido
+SELECT * FROM itempedido
+SELECT * FROM produto
+SELECT * FROM log
+
+--UPDATE produto SET quantidade = 10 WHERE codproduto = 2
+
+INSERT INTO itempedido VALUES(7, 4, 10.90, 11, 2)
+
+CREATE PROCEDURE SP_INSERE_LOG(@DESCRICAO VARCHAR(255))
+AS
+BEGIN
+	INSERT INTO
+		log
+	VALUES(
+		(SELECT ISNULL(MAX(codlog) + 1, 1) FROM log),
+		GETDATE(),
+		@DESCRICAO
+	)
+END;
+GO
