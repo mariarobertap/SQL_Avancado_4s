@@ -85,33 +85,112 @@ GROUP BY
 			o.order_status = 4
 		GROUP BY
 			YEAR(o.order_date)
+
+
 /*
 4) Crie uma view para exibir o volume orders completed (volume de pedidos concluídos)
 e a revenue (receita) por products (produtos) e model year (modelo do ano).
 */
-select * from production.products
+
+	SELECT 
+		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') AS 'Faturamento',
+		o.order_status, p.product_name, p.model_year
+	FROM 
+		sales.orders o
+	JOIN
+		sales.order_items s on o.order_id = s.order_id
+	JOIN
+		production.products p on s.product_id = p.product_id
+	WHERE
+		o.order_status = 4
+	GROUP BY
+		 o.order_status, p.product_name, p.model_year
+
+
+
 /*
 5) Crie uma view para exibir o volume orders completed (volume de pedidos concluídos)
 e a revenue (receita) por brands (marcas).
 */
 
+	SELECT 
+		count(o.order_id) as 'Volume',
+		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') as 'Faturamento',
+		b.brand_name as 'Brand Name'
+	FROM 
+		sales.orders o
+	JOIN
+		sales.order_items s on o.order_id = s.order_id
+	JOIN
+		production.products p on s.product_id = p.product_id
+	JOIN
+		production.brands b on b.brand_id = p.brand_id
+	WHERE
+		o.order_status = 4
+	GROUP BY
+		 b.brand_name
+
+		  
 /*
 6) Crie uma view para exibir o volume orders completed (volume de pedidos concluídos)
 e a revenue (receita) por categories (categorias).
 */
 
+select * from production.categories
+
+	SELECT 
+		count(o.order_id) as 'Volume',
+		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') as 'Faturamento',
+		b.category_name as 'Brand Name'
+	FROM 
+		sales.orders o
+	JOIN
+		sales.order_items s on o.order_id = s.order_id
+	JOIN
+		production.products p on s.product_id = p.product_id
+	JOIN
+		production.categories b on b.category_id = p.category_id
+	WHERE
+		o.order_status = 4
+	GROUP BY
+		 b.category_name
+
+
+
+
 /*
-6) Crie uma view para exibir o volume orders completed (volume de pedidos concluídos)
+7) Crie uma view para exibir o volume orders completed (volume de pedidos concluídos)
 e a revenue (receita) por state (estado) e city (cidade).
 */
 
+	select * from sales.orders
+	select * from sales.staffs
+
+	select * from sales.customers
+
+	SELECT 
+		count(o.order_id) as 'Volume',
+		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') as 'Faturamento',
+		c.street as 'Rua'
+	FROM 
+		sales.orders o
+	JOIN
+		sales.customers c on c.customer_id = o.customer_id
+	JOIN
+		sales.order_items s on o.order_id = s.order_id
+	WHERE
+		o.order_status = 4
+	GROUP BY
+		c.street
+
 /*
-7) Crie uma view para exibir a data da primeira e última order (pedido)
+8) Crie uma view para exibir a data da primeira e última order (pedido)
 de cada customer (cliente).
 */
 
+
 /*
-8) Crie uma indexed view para exibir o volume orders completed (volume de pedidos concluídos),
+9) Crie uma indexed view para exibir o volume orders completed (volume de pedidos concluídos),
 a revenue (receita), o discounts (total de descontos) e a percentage discounts 
 (percentual de descontos) por ano e trimestre.
 */
