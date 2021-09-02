@@ -210,7 +210,7 @@ INSERT INTO itempedido VALUES (7, 11, 1, 2, 2)
 --10. Crie um TRIGGER para não permitir quantidade negativa na tabela ITEMPEDIDO.
 CREATE TRIGGER TGR_IMPEDIR_QUANTIDADE_NEGATIVA
 ON itempedido
-AFTER INSERT
+AFTER INSERT, UPDATE
 AS
 BEGIN
 	
@@ -224,7 +224,6 @@ BEGIN
 
 	IF(@QUANTIDADE < 0)
 		ROLLBACK TRANSACTION
-
 END
 
 --7. Crie um TRIGGER para criar um log quando o valor total do pedido for maior que
@@ -415,6 +414,6 @@ BEGIN
 		(SELECT ISNULL(MAX(codlog) + 1, 1) FROM log),
 		GETDATE(),
 		@DESCRICAO
-	)
+		)
 END;
 GO
