@@ -38,7 +38,7 @@ Order status:
 2 = Processing; 
 3 = Rejected; 
 4 = Completed
-*/
+*/   
 
 select * from sales.orders
 
