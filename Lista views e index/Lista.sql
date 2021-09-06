@@ -188,9 +188,145 @@ e a revenue (receita) por state (estado) e city (cidade).
 de cada customer (cliente).
 */
 
+	SELECT 
+		count(o.order_id) as 'Volume',
+		MIN(o.order_date),
+		MAX(o.order_date),
+		c.first_name
+	FROM 
+		sales.orders o
+	JOIN
+		sales.customers c on c.customer_id = o.customer_id
+	WHERE
+		o.order_status = 4
+	GROUP BY
+	  c.first_name
+	ORDER BY 
+		1 desc
+
+
+	SELECT count(*) FROM sales.customers
 
 /*
 9) Crie uma indexed view para exibir o volume orders completed (volume de pedidos concluídos),
 a revenue (receita), o discounts (total de descontos) e a percentage discounts 
 (percentual de descontos) por ano e trimestre.
 */
+
+
+	SELECT 
+		count(o.order_id) as 'Volume',
+		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') as 'Faturamento',
+		FORMAT(SUM(s.discount * s.quantity), 'C', 'PT-BR') as 'Discount'
+	FROM 
+		sales.orders o
+	JOIN
+		sales.order_items s on o.order_id = s.order_id
+	JOIN
+		production.products p on s.product_id = p.product_id
+	WHERE
+		o.order_status = 4
+	GROUP BY
+		 b.category_name
+
+		 select * from sales.order_items
+
+		 select * from sales.orders where order_id = 2
+
+WITH MAIO(ID)
+AS (
+SELECT
+	    ID_CLIFOR AS ID		
+	FROM
+		NOTA_FISCAL
+	WHERE
+		TIP_NF = 'S' AND MONTH(DATA_EMISSAO) = 5 AND YEAR(DATA_EMISSAO) = 2018
+), JUNHO (ID)
+AS (
+SELECT	
+  NF.ID_CLIFOR AS ID
+FROM
+	NOTA_FISCAL NF
+JOIN 
+	(SELECT
+	    ID_CLIFOR AS ID		
+	FROM
+		NOTA_FISCAL
+	WHERE
+		TIP_NF = 'S' AND MONTH(DATA_EMISSAO) = 5 AND YEAR(DATA_EMISSAO) = 2018
+		)AS TAB ON TAB.ID = NF.ID_CLIFOR
+WHERE
+	TIP_NF = 'S' AND 
+	(MONTH(DATA_EMISSAO) = 6 AND YEAR(DATA_EMISSAO) = 2018)
+
+), JULHO (ID)
+AS (
+SELECT	
+  NF.ID_CLIFOR AS ID
+FROM
+	NOTA_FISCAL NF
+JOIN 
+	(SELECT
+	    ID_CLIFOR AS ID		
+	FROM
+		NOTA_FISCAL
+	WHERE
+		TIP_NF = 'S' AND MONTH(DATA_EMISSAO) = 5 AND YEAR(DATA_EMISSAO) = 2018
+		)AS TAB ON TAB.ID = NF.ID_CLIFOR
+
+WHERE
+	TIP_NF = 'S' AND 
+	(MONTH(DATA_EMISSAO) = 7 AND YEAR(DATA_EMISSAO) = 2018)
+), AGOSTO (ID)
+AS (
+SELECT	
+  NF.ID_CLIFOR AS ID
+FROM
+	NOTA_FISCAL NF
+JOIN 
+	(SELECT
+	    ID_CLIFOR AS ID		
+	FROM
+		NOTA_FISCAL
+	WHERE
+		TIP_NF = 'S' AND MONTH(DATA_EMISSAO) = 5 AND YEAR(DATA_EMISSAO) = 2018
+		)AS TAB ON TAB.ID = NF.ID_CLIFOR
+WHERE
+	TIP_NF = 'S' AND 
+	(MONTH(DATA_EMISSAO) = 8 AND YEAR(DATA_EMISSAO) = 2018)
+
+), SETEMBRO (ID)
+AS (
+SELECT	
+  NF.ID_CLIFOR AS ID
+FROM
+	NOTA_FISCAL NF
+JOIN 
+	(SELECT
+	    ID_CLIFOR AS ID		
+	FROM
+		NOTA_FISCAL
+	WHERE
+		TIP_NF = 'S' AND MONTH(DATA_EMISSAO) = 5 AND YEAR(DATA_EMISSAO) = 2018
+		)AS TAB ON TAB.ID = NF.ID_CLIFOR
+
+WHERE
+	TIP_NF = 'S' AND 
+	(MONTH(DATA_EMISSAO) = 9 AND YEAR(DATA_EMISSAO) = 2018)
+)
+SELECT 
+COUNT(DISTINCT M.ID) AS 'Maio/2018',
+COUNT(DISTINCT J.ID) AS 'Junho/2018',
+COUNT(DISTINCT JH.ID) AS 'Julho/2018',
+COUNT(DISTINCT A.ID) AS 'Agosto/2018',
+COUNT(DISTINCT S.ID) AS 'Setembro/2018'
+FROM 
+	MAIO M
+JOIN 
+	JUNHO J ON 0 = 0
+JOIN 
+	JULHO JH ON 0 = 0
+JOIN 
+	AGOSTO  A ON 0 = 0
+JOIN 
+	SETEMBRO S ON 0 = 0
