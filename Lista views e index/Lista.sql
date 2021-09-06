@@ -114,7 +114,7 @@ e a revenue (receita) por brands (marcas).
 */
 
 	SELECT 
-		count(o.order_id) as 'Volume',
+		count(distinct o.order_id) as 'Volume',
 		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') as 'Faturamento',
 		b.brand_name as 'Brand Name'
 	FROM 
@@ -139,7 +139,7 @@ e a revenue (receita) por categories (categorias).
 select * from production.categories
 
 	SELECT 
-		count(o.order_id) as 'Volume',
+		count(distinct o.order_id) as 'Volume',
 		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') as 'Faturamento',
 		b.category_name as 'Brand Name'
 	FROM 
@@ -169,7 +169,7 @@ e a revenue (receita) por state (estado) e city (cidade).
 	select * from sales.customers
 
 	SELECT 
-		count(o.order_id) as 'Volume',
+		count(distinct o.order_id) as 'Volume',
 		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') as 'Faturamento',
 		c.street as 'Rua'
 	FROM 
@@ -223,7 +223,7 @@ select
 	
 from(
 	SELECT 
-		count(o.order_id) as volume,
+		count(distinct o.order_id) as volume,
 		SUM(s.list_price * s.quantity)  as amount,
 		SUM(s.discount * s.quantity)  as discountAmount,
 		YEAR(o.order_date) as Year,
@@ -245,5 +245,7 @@ from(
 		f.Year,
 		f.Trimestre
 
-
-
+		select count(*), year(order_date) from sales.orders 	WHERE
+	    order_status = 4  
+		group by  year(order_date), DATEPART(QUARTER, order_date) order by year(order_date), DATEPART(QUARTER, order_date) 
+		select * from sales.order_items
