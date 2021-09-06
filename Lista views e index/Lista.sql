@@ -213,11 +213,21 @@ a revenue (receita), o discounts (total de descontos) e a percentage discounts
 (percentual de descontos) por ano e trimestre.
 */
 
-
+select 
+	f.volume,
+	f.amount,
+	f.discountAmount,
+	f.discountAmount / f.amount *100 as porcentagem,
+	f.Year,
+	f.Trimestre
+	
+from(
 	SELECT 
-		count(o.order_id) as 'Volume',
-		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') as 'Faturamento',
-		FORMAT(SUM(s.discount * s.quantity), 'C', 'PT-BR') as 'Discount'
+		count(o.order_id) as volume,
+		SUM(s.list_price * s.quantity)  as amount,
+		SUM(s.discount * s.quantity)  as discountAmount,
+		YEAR(o.order_date) as Year,
+		DATEPART(QUARTER, o.order_date) as Trimestre
 	FROM 
 		sales.orders o
 	JOIN
@@ -225,108 +235,15 @@ a revenue (receita), o discounts (total de descontos) e a percentage discounts
 	JOIN
 		production.products p on s.product_id = p.product_id
 	WHERE
-		o.order_status = 4
+		o.order_status = 4 
 	GROUP BY
-		 b.category_name
+		YEAR(o.order_date),
+		DATEPART(QUARTER, o.order_date)
 
-		 select * from sales.order_items
+)  as f
+	order by 
+		f.Year,
+		f.Trimestre
 
-		 select * from sales.orders where order_id = 2
 
-WITH MAIO(ID)
-AS (
-SELECT
-	    ID_CLIFOR AS ID		
-	FROM
-		NOTA_FISCAL
-	WHERE
-		TIP_NF = 'S' AND MONTH(DATA_EMISSAO) = 5 AND YEAR(DATA_EMISSAO) = 2018
-), JUNHO (ID)
-AS (
-SELECT	
-  NF.ID_CLIFOR AS ID
-FROM
-	NOTA_FISCAL NF
-JOIN 
-	(SELECT
-	    ID_CLIFOR AS ID		
-	FROM
-		NOTA_FISCAL
-	WHERE
-		TIP_NF = 'S' AND MONTH(DATA_EMISSAO) = 5 AND YEAR(DATA_EMISSAO) = 2018
-		)AS TAB ON TAB.ID = NF.ID_CLIFOR
-WHERE
-	TIP_NF = 'S' AND 
-	(MONTH(DATA_EMISSAO) = 6 AND YEAR(DATA_EMISSAO) = 2018)
 
-), JULHO (ID)
-AS (
-SELECT	
-  NF.ID_CLIFOR AS ID
-FROM
-	NOTA_FISCAL NF
-JOIN 
-	(SELECT
-	    ID_CLIFOR AS ID		
-	FROM
-		NOTA_FISCAL
-	WHERE
-		TIP_NF = 'S' AND MONTH(DATA_EMISSAO) = 5 AND YEAR(DATA_EMISSAO) = 2018
-		)AS TAB ON TAB.ID = NF.ID_CLIFOR
-
-WHERE
-	TIP_NF = 'S' AND 
-	(MONTH(DATA_EMISSAO) = 7 AND YEAR(DATA_EMISSAO) = 2018)
-), AGOSTO (ID)
-AS (
-SELECT	
-  NF.ID_CLIFOR AS ID
-FROM
-	NOTA_FISCAL NF
-JOIN 
-	(SELECT
-	    ID_CLIFOR AS ID		
-	FROM
-		NOTA_FISCAL
-	WHERE
-		TIP_NF = 'S' AND MONTH(DATA_EMISSAO) = 5 AND YEAR(DATA_EMISSAO) = 2018
-		)AS TAB ON TAB.ID = NF.ID_CLIFOR
-WHERE
-	TIP_NF = 'S' AND 
-	(MONTH(DATA_EMISSAO) = 8 AND YEAR(DATA_EMISSAO) = 2018)
-
-), SETEMBRO (ID)
-AS (
-SELECT	
-  NF.ID_CLIFOR AS ID
-FROM
-	NOTA_FISCAL NF
-JOIN 
-	(SELECT
-	    ID_CLIFOR AS ID		
-	FROM
-		NOTA_FISCAL
-	WHERE
-		TIP_NF = 'S' AND MONTH(DATA_EMISSAO) = 5 AND YEAR(DATA_EMISSAO) = 2018
-		)AS TAB ON TAB.ID = NF.ID_CLIFOR
-
-WHERE
-	TIP_NF = 'S' AND 
-	(MONTH(DATA_EMISSAO) = 9 AND YEAR(DATA_EMISSAO) = 2018)
-)
-SELECT 
-COUNT(DISTINCT M.ID) AS 'Maio/2018',
-COUNT(DISTINCT J.ID) AS 'Junho/2018',
-COUNT(DISTINCT JH.ID) AS 'Julho/2018',
-COUNT(DISTINCT A.ID) AS 'Agosto/2018',
-COUNT(DISTINCT S.ID) AS 'Setembro/2018'
-FROM 
-	MAIO M
-JOIN 
-	JUNHO J ON 0 = 0
-JOIN 
-	JULHO JH ON 0 = 0
-JOIN 
-	AGOSTO  A ON 0 = 0
-JOIN 
-	SETEMBRO S ON 0 = 0
