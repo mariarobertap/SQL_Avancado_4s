@@ -17,17 +17,21 @@ Order status:
 
 
 SELECT 
-	count(o.order_id), s.store_name, st.first_name
+	count(o.order_id) 'Completed orders' ,
+	s.store_name as 'Store name',
+	CONCAT(st.first_name, ' ',  st.last_name) 'Staff name'
 FROM 
 	sales.orders o
 JOIN
 	sales.stores s on o.store_id = s.store_id
 JOIN
-	sales.staffs st on s.store_id = st.store_id
+	sales.staffs st on st.staff_id = o.staff_id
 WHERE
 	o.order_status = 4
 GROUP BY
-	s.store_name, st.first_name
+	s.store_name,  st.staff_id, st.first_name,st.last_name
+ORDER BY 
+	1 DESC
 
 /*
 2) Crie uma view para exibir o [número de orders (pedidos) por ano, mês 
@@ -40,22 +44,21 @@ Order status:
 4 = Completed
 */   
 
-select * from sales.orders
-
 SELECT 
-	count(o.order_id), o.order_status, Month(order_date), year(order_date)
+	YEAR(order_date) as 'Year',
+	MONTH(order_date) as 'Month',
+	COUNT(CASE WHEN [order_status] = 1 THEN [order_id] END) as 'Pending',
+	COUNT(CASE WHEN [order_status] = 2 THEN [order_id] END) as 'Processing',
+	COUNT(CASE WHEN [order_status] = 3 THEN [order_id] END) as 'Rejected',
+	COUNT(CASE WHEN [order_status] = 4 THEN [order_id] END) as 'Completed'
 FROM 
-	sales.orders o
-JOIN
-	sales.stores s on o.store_id = s.store_id
-JOIN
-	sales.staffs st on s.store_id = st.store_id
-WHERE
-	o.order_status = 4
-GROUP BY
-	 Month(order_date), year(order_date),  o.order_status
-
-
+	sales.orders
+GROUP BY 
+	YEAR(order_date),
+	MONTH(order_date)
+order by 
+	YEAR(order_date),
+	MONTH(order_date)
 
 /*
 3) Crie uma view para exibir a revenue (receita) e a revenue accumulated 
@@ -64,11 +67,11 @@ GROUP BY
 
 
 	SELECT
-		YEAR(o.order_date) as 'Ano',
-		FORMAT(SUM(oi.list_price * oi.quantity), 'C', 'PT-BR') AS 'Faturamento',
-		'Faturamento Acumulado' = (
+		YEAR(o.order_date) as 'Year',
+		FORMAT(SUM(oi.list_price * oi.quantity), 'C', 'PT-BR') AS 'Revenue',
+		'Accumulated revenue' = (
 				SELECT 
-					FORMAT(SUM(oi2.list_price * oi2.quantity), 'C', 'PT-BR') AS 'Montante Total'
+					FORMAT(SUM(oi2.list_price * oi2.quantity), 'C', 'PT-BR') 
 					FROM 
 						sales.order_items oi2
 					JOIN
@@ -93,8 +96,11 @@ e a revenue (receita) por products (produtos) e model year (modelo do ano).
 */
 
 	SELECT 
-		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') AS 'Faturamento',
-		o.order_status, p.product_name, p.model_year
+		COUNT(DISTINCT o.order_id) AS 'Volume',
+		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') AS 'Revenue',
+		CASE WHEN [order_status] = 4 THEN 'Completed' END as Status,
+		p.product_name as 'Product name',
+		p.model_year as 'Model year'
 	FROM 
 		sales.orders o
 	JOIN
@@ -104,7 +110,9 @@ e a revenue (receita) por products (produtos) e model year (modelo do ano).
 	WHERE
 		o.order_status = 4
 	GROUP BY
-		 o.order_status, p.product_name, p.model_year
+		 o.order_status, p.product_name, p.model_year, p.product_id
+	ORDER BY
+		1 DESC
 
 
 
@@ -115,7 +123,11 @@ e a revenue (receita) por brands (marcas).
 
 	SELECT 
 		count(distinct o.order_id) as 'Volume',
-		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') as 'Faturamento',
+		CASE 
+			WHEN [order_status] = 4
+			THEN 'Completed'
+		END as Status,
+		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') as 'Revenue',
 		b.brand_name as 'Brand Name'
 	FROM 
 		sales.orders o
@@ -128,7 +140,10 @@ e a revenue (receita) por brands (marcas).
 	WHERE
 		o.order_status = 4
 	GROUP BY
-		 b.brand_name
+		 b.brand_name, o.order_status, b.brand_id
+	ORDER BY
+		1 DESC
+
 
 		  
 /*
@@ -140,8 +155,8 @@ select * from production.categories
 
 	SELECT 
 		count(distinct o.order_id) as 'Volume',
-		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') as 'Faturamento',
-		b.category_name as 'Brand Name'
+		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') as 'Revenue',
+		b.category_name as 'Categorie name'
 	FROM 
 		sales.orders o
 	JOIN
@@ -153,7 +168,7 @@ select * from production.categories
 	WHERE
 		o.order_status = 4
 	GROUP BY
-		 b.category_name
+		 b.category_name, b.category_id
 
 
 
@@ -171,7 +186,8 @@ e a revenue (receita) por state (estado) e city (cidade).
 	SELECT 
 		count(distinct o.order_id) as 'Volume',
 		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') as 'Faturamento',
-		c.street as 'Rua'
+		c.city as 'City', 
+		c.state as 'State'
 	FROM 
 		sales.orders o
 	JOIN
@@ -181,7 +197,12 @@ e a revenue (receita) por state (estado) e city (cidade).
 	WHERE
 		o.order_status = 4
 	GROUP BY
-		c.street
+		c.city, c.state
+	ORDER BY 
+		c.state, 
+		count(distinct o.order_id),
+		SUM(s.list_price * s.quantity)
+
 
 /*
 8) Crie uma view para exibir a data da primeira e última order (pedido)
@@ -189,23 +210,21 @@ de cada customer (cliente).
 */
 
 	SELECT 
-		count(o.order_id) as 'Volume',
-		MIN(o.order_date),
-		MAX(o.order_date),
-		c.first_name
+		MIN(o.order_date) as 'First order',
+		MAX(o.order_date) as 'Last order',
+		CONCAT(c.first_name, ' ',  c.last_name) 'Staff name'
 	FROM 
 		sales.orders o
 	JOIN
 		sales.customers c on c.customer_id = o.customer_id
-	WHERE
-		o.order_status = 4
 	GROUP BY
-	  c.first_name
-	ORDER BY 
-		1 desc
+	  c.customer_id,
+	  CONCAT(c.first_name, ' ',  c.last_name)
+    ORDER BY 
+		c.customer_id
 
 
-	SELECT count(*) FROM sales.customers
+
 
 /*
 9) Crie uma indexed view para exibir o volume orders completed (volume de pedidos concluídos),
@@ -215,17 +234,17 @@ a revenue (receita), o discounts (total de descontos) e a percentage discounts
 
 select 
 	f.volume,
-	f.amount,
-	f.discountAmount,
-	f.discountAmount / f.amount *100 as porcentagem,
+	FORMAT(f.amount,  'C', 'PT-BR'),
+	FORMAT(f.disc,   'C', 'PT-BR'),
+	cast(Round((f.disc / f.amount *100), 2) as decimal(18,2)),
 	f.Year,
 	f.Trimestre
 	
-from(
+FROM(
 	SELECT 
 		count(distinct o.order_id) as volume,
-		SUM(s.list_price * s.quantity)  as amount,
-		SUM(s.discount * s.quantity)  as discountAmount,
+		SUM(s.list_price * s.quantity) as amount,
+		SUM(((s.list_price * s.quantity) * s.discount)) as disc,
 		YEAR(o.order_date) as Year,
 		DATEPART(QUARTER, o.order_date) as Trimestre
 	FROM 
@@ -240,12 +259,14 @@ from(
 		YEAR(o.order_date),
 		DATEPART(QUARTER, o.order_date)
 
-)  as f
-	order by 
+)  AS f
+	ORDER BY 
 		f.Year,
 		f.Trimestre
 
-		select count(*), year(order_date) from sales.orders 	WHERE
-	    order_status = 4  
-		group by  year(order_date), DATEPART(QUARTER, order_date) order by year(order_date), DATEPART(QUARTER, order_date) 
-		select * from sales.order_items
+
+
+
+
+		
+	
