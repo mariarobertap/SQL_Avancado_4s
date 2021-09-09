@@ -1,4 +1,5 @@
-﻿/*
+﻿
+/*
     # Lista de Exercícios - Views & Indexed Views
     # Disciplina: Banco de Dados Avançado
     # Prof.: Tiago José Marciano #datalover🖤
@@ -79,7 +80,6 @@ PIVOT (
 		[Pending], [Processing], [Rejected], [Completed]
 	)
 ) AS T_COLS
-ORDER BY 1, 2
 
 /*
 3) Crie uma view para exibir a revenue (receita) e a revenue accumulated 
@@ -114,11 +114,47 @@ GROUP BY
 4) Crie uma view para exibir o volume orders completed (volume de pedidos concluídos)
 e a revenue (receita) por products (produtos) e model year (modelo do ano).
 */
+CREATE VIEW sales.vw_exercicio_04
+AS
+SELECT
+	p.product_name,
+	p.model_year,
+	COUNT(DISTINCT o.order_id) as volume_orders,
+	FORMAT(SUM((i.quantity * i.list_price) * (1 - i.discount)), 'C', 'EN-US') as revenue
+FROM
+	sales.order_items i
+	JOIN sales.orders o
+		ON o.order_id = i.order_id
+	JOIN production.products p
+		ON p.product_id = i.product_id
+WHERE
+	o.order_status = 4
+GROUP BY
+	p.product_name,
+	p.model_year
 
 /*
 5) Crie uma view para exibir o volume orders completed (volume de pedidos concluídos)
 e a revenue (receita) por brands (marcas).
 */
+CREATE VIEW sales.vw_exercicio_5
+AS
+SELECT
+	b.brand_name,
+	COUNT(DISTINCT o.order_id) as volume_orders,
+	FORMAT(SUM((i.quantity * i.list_price) * (1 - i.discount)), 'C', 'EN-US') as revenue
+FROM
+	sales.order_items i
+	JOIN sales.orders o
+		ON o.order_id = i.order_id
+	JOIN production.products p
+		ON p.product_id = i.product_id
+	JOIN production.brands b
+		ON b.brand_id = p.brand_id
+WHERE
+	o.order_status = 4
+GROUP BY
+	b.brand_name
 
 /*
 6) Crie uma view para exibir o volume orders completed (volume de pedidos concluídos)
