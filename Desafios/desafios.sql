@@ -85,7 +85,7 @@ BEGIN
     END 
 	
 	
-
+	
 
 
 
@@ -105,7 +105,7 @@ SELECT dbo.fncValida_CPF('11111111111')
 	SELECT 
 		FI.descricao,
 		COUNT(LO.fitaId) AS 'Locacoes',
-		ROW_NUMBER() OVER(ORDER BY COUNT(LO.fitaId)desc ) AS Rank
+
 	FROM 
 		filme fi 
 	JOIN
@@ -128,7 +128,6 @@ SELECT
 	tab.volumn as 'Volume' ,
 	FORMAT(tab.amount,  'C', 'PT-BR') 'Total amount (revenue)',
 	FORMAT(tab.disc,   'C', 'PT-BR') 'Total discounts',
-	CONVERT(VARCHAR(6),CAST(ROUND((tab.disc / tab.amount *100), 2) AS DECIMAL(18,2))) + '%' 'Percent OFF',
 	tab.year AS 'Year',
 	tab.trimestre AS 'Quarter'
 	
@@ -136,7 +135,7 @@ FROM(
 	SELECT 
 		count(DISTINCT o.order_id) AS volumn,
 		SUM((s.quantity * s.list_price) * (1 - s.discount)) AS amount,
-		SUM(((s.list_price * s.quantity)  * s.discount)) AS disc,
+
 		YEAR(o.order_date) AS year,
 		DATEPART(QUARTER, o.order_date) as trimestre
 	FROM 
