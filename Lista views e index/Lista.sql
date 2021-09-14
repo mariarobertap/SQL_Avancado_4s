@@ -231,7 +231,7 @@ de cada customer (cliente).
 a revenue (receita), o discounts (total de descontos) e a percentage discounts 
 (percentual de descontos) por ano e trimestre.
 */
-CREATE VIEW sales.ivw_getPercentageOFFByquarter
+CREATE VIEW sales.IVW_getPercentageOFFByquarter
 WITH SCHEMABINDING
 AS
 SELECT 
@@ -244,7 +244,7 @@ SELECT
 	
 FROM(
 	SELECT 
-		count(DISTINCT o.order_id) AS volumn,
+		COUNT(DISTINCT o.order_id) AS volumn,
 		SUM((s.quantity * s.list_price) * (1 - s.discount)) AS amount,
 		SUM(((s.list_price * s.quantity)  * s.discount)) AS disc,
 		YEAR(o.order_date) AS year,
@@ -262,10 +262,13 @@ FROM(
 		DATEPART(QUARTER, o.order_date)
 
 )  AS tab
+
+
+SELECT 
+	*
+FROM
+	sales.IVW_getPercentageOFFByquarter
 ORDER BY 
-	tab.year,
-	tab.trimestre
+	5,
+	6 
 
-
-
-	SELECT * FROM sales.order_items
