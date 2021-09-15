@@ -155,7 +155,7 @@ select * from production.categories
 
 	SELECT 
 		count(distinct o.order_id) as 'Volume',
-		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') as 'Revenue',
+		FORMAT(SUM((s.quantity * s.list_price) * (1 - s.discount)), 'C', 'PT-BR') AS 'Revenue',
 		b.category_name as 'Categorie name'
 	FROM 
 		sales.orders o
@@ -169,6 +169,8 @@ select * from production.categories
 		o.order_status = 4
 	GROUP BY
 		 b.category_name, b.category_id
+	ORDER BY 
+		3
 
 
 
@@ -185,7 +187,7 @@ e a revenue (receita) por state (estado) e city (cidade).
 
 	SELECT 
 		count(distinct o.order_id) as 'Volume',
-		FORMAT(SUM(s.list_price * s.quantity), 'C', 'PT-BR') as 'Faturamento',
+		FORMAT(SUM((s.quantity * s.list_price) * (1 - s.discount)), 'C', 'PT-BR') AS 'Revenue',
 		c.city as 'City', 
 		c.state as 'State'
 	FROM 
@@ -231,6 +233,8 @@ de cada customer (cliente).
 a revenue (receita), o discounts (total de descontos) e a percentage discounts 
 (percentual de descontos) por ano e trimestre.
 */
+/*Enviando 2 exemplos porque não consegui colocar um index na primeira view. O segundo deu, mas não acho que seja a maneira correta..*/
+
 CREATE VIEW sales.IVW_getPercentageOFFByquarter
 WITH SCHEMABINDING
 AS
@@ -238,7 +242,7 @@ SELECT
 	tab.volumn as 'Volume' ,
 	FORMAT(tab.amount,  'C', 'PT-BR') 'Total amount (revenue)',
 	FORMAT(tab.disc,   'C', 'PT-BR') 'Total discounts',
-	CONVERT(VARCHAR(6),CAST(ROUND((tab.disc / tab.amount *100), 2) AS DECIMAL(18,2))) + '%' 'Percent OFF',
+	CONVERT(VARCHAR(6),CAST(ROUND((tab.disc / tab.amountWithoutDiscounts *100), 2) AS DECIMAL(18,2))) + '%' 'Percent OFF',
 	tab.year AS 'Year',
 	tab.trimestre AS 'Quarter'
 	
@@ -246,6 +250,7 @@ FROM(
 	SELECT 
 		COUNT(DISTINCT o.order_id) AS volumn,
 		SUM((s.quantity * s.list_price) * (1 - s.discount)) AS amount,
+		SUM((s.quantity * s.list_price)) AS amountWithoutDiscounts,
 		SUM(((s.list_price * s.quantity)  * s.discount)) AS disc,
 		YEAR(o.order_date) AS year,
 		DATEPART(QUARTER, o.order_date) as trimestre
@@ -261,7 +266,8 @@ FROM(
 		YEAR(o.order_date),
 		DATEPART(QUARTER, o.order_date)
 
-)  AS tab
+) AS tab
+
 
 
 SELECT 
@@ -272,3 +278,52 @@ ORDER BY
 	5,
 	6 
 
+---------------------------------------------------------------------------------------
+
+CREATE VIEW sales.IVW_getPercentageOFFByquarter2
+WITH SCHEMABINDING
+AS
+	
+	SELECT 
+		o.[order_id],
+		s.[item_id],
+		s.[quantity],
+		s.[list_price],
+		s.[discount],
+		o.[order_date]
+	FROM 
+		sales.orders o
+	JOIN
+		sales.order_items s ON o.order_id = s.order_id
+	JOIN
+		production.products p ON s.product_id = p.product_id
+	WHERE
+		o.order_status = 4 
+
+
+
+
+CREATE UNIQUE CLUSTERED INDEX
+	index_TESTE ON sales.IVW_getPercentageOFFByquarter2 ([order_id], [item_id]);
+
+
+
+
+select
+		COUNT(DISTINCT order_id) AS  'Volume' ,
+		FORMAT(SUM((quantity * list_price) * (1 - discount)),'C', 'PT-BR' ) AS  'Total amount (revenue)',
+		FORMAT(SUM(((list_price * quantity)  * discount)), 'C', 'PT-BR') AS 'Total discounts',
+        CONCAT(CAST(CAST((SUM((list_price  * quantity) * discount) * 100) / SUM((list_price * quantity) ) AS DECIMAL(10, 2)) AS VARCHAR), '%') AS PERC_DESCONTO,
+		YEAR(order_date) AS year,
+		DATEPART(QUARTER, order_date) as trimestre
+from sales.IVW_getPercentageOFFByquarter2 
+group by
+YEAR(order_date),
+DATEPART(QUARTER, order_date)
+
+
+
+SELECT 
+	*
+FROM
+	sales.IVW_getPercentageOFFByquarter
