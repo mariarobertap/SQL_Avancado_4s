@@ -32,9 +32,11 @@ DECLARE cursor_nome CURSOR FOR
 		DECLARE @mensagem VARCHAR(100)
 
 		--SELECT @mensagem = '# Filmes de ' + @categoria
-		SET @mensagem = CONCAT(@Nome, ' ', @Cidade)
-			
-		PRINT @mensagem
+		SET @mensagem = CONCAT('Nome: ', @Nome, '|||   Nome da cidade: ', @Cidade)
+		PRINT '_______________________'
+		PRINT CONCAT('Nome: ', @Nome)
+		PRINT '_______________________'
+		PRINT CONCAT('Nome da cidade: ', @Cidade)
 
 			FETCH NEXT FROM  cursor_nome INTO @Nome, @Cidade
 	END
