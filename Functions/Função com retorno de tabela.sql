@@ -1,3 +1,8 @@
+/*
+	Desafio indexed view
+	Banco LOCADORA.bak
+*/
+
 --Funções com retorno de tabela
 --Função que retorna a diferença em minutos de duas datas diferentes
 CREATE FUNCTION FN_DATA_MINUTOS(@Min INT, @InicialDate DATETIME, @FinalDate DATETIME)

@@ -1,4 +1,7 @@
-
+/*
+	lista
+	Banco LOCADORA.bak
+*/
 
 /*(1) Exiba a quantidade total de locações de um determinado filme. (Exibir o id, nome do filme
 e quantidade de locações)

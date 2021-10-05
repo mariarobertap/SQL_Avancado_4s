@@ -1,3 +1,8 @@
+/*
+	Desafio indexed view
+	Banco COMERCIO.bak
+*/
+
 /*Lista de Exercícios utilizando a base de dados COMERCIO: Procedimentos e Funções.
 
 # Procedimentos

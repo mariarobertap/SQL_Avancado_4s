@@ -1,81 +1,49 @@
 /*
-	BANCO DE DADOS AVANÇADO (TADS)
 	Exemplo de Cursor
-	Prof: Tiago José Marciano
+	Banco LOCADORA.back
 */
+- 1 - Declare Variables
+-- * UPDATE WITH YOUR SPECIFIC CODE HERE *
+DECLARE @name VARCHAR(50) -- database name 
+DECLARE @path VARCHAR(256) -- path for backup files 
+DECLARE @fileName VARCHAR(256) -- filename for backup 
+DECLARE @fileDate VARCHAR(20) -- used for file name 
 
-USE LOCADORA;
+-- Initialize Variables
+-- * UPDATE WITH YOUR SPECIFIC CODE HERE *
+SET @path = 'C:\Backup\' 
 
-SET NOCOUNT ON;
+SELECT @fileDate = CONVERT(VARCHAR(20),GETDATE(),112) 
 
-DECLARE cursor_categoria CURSOR FOR 
+-- 2 - Declare Cursor
+DECLARE db_cursor CURSOR FOR 
+-- Populate the cursor with your logic
+-- * UPDATE WITH YOUR SPECIFIC CODE HERE *
+SELECT name 
+FROM MASTER.dbo.sysdatabases 
+WHERE name NOT IN ('master','model','msdb','tempdb') 
 
-	SELECT id as categoriaId, descricao as categoria FROM categoria
+-- Open the Cursor
+OPEN db_cursor
 
-	DECLARE @categoriaId INT
-	DECLARE @categoria VARCHAR(100)
+-- 3 - Fetch the next record from the cursor
+FETCH NEXT FROM db_cursor INTO @name  
 
-	OPEN cursor_categoria
+-- Set the status for the cursor
+WHILE @@FETCH_STATUS = 0  
+ 
+BEGIN  
+	-- 4 - Begin the custom business logic
+	-- * UPDATE WITH YOUR SPECIFIC CODE HERE *
+   	SET @fileName = @path + @name + '_' + @fileDate + '.BAK' 
+  	BACKUP DATABASE @name TO DISK = @fileName 
 
-	FETCH NEXT FROM 
-		cursor_categoria
-	INTO
-		@categoriaId,
-		@categoria
+	-- 5 - Fetch the next record from the cursor
+ 	FETCH NEXT FROM db_cursor INTO @name 
+END 
 
-	WHILE @@FETCH_STATUS = 0
-	BEGIN
-		DECLARE @mensagem VARCHAR(100)
+-- 6 - Close the cursor
+CLOSE db_cursor  
 
-		SELECT @mensagem = '# Filmes de ' + @categoria
-
-		PRINT @mensagem
-
-		DECLARE cursor_filme CURSOR FOR
-
-			SELECT 
-				id as filmeId, 
-				descricao as filme
-			FROM 
-				filme 
-			WHERE 
-				categoriaId = @categoriaId
-
-			DECLARE @filmeId INT
-			DECLARE @filme VARCHAR(100)
-
-			OPEN cursor_filme
-
-			FETCH NEXT FROM 
-				cursor_filme
-			INTO
-				@filmeId,
-				@filme
-			
-			WHILE @@FETCH_STATUS = 0
-			BEGIN
-				SELECT @mensagem = '- ' + @filme
-
-				PRINT @mensagem
-
-				FETCH NEXT FROM 
-					cursor_filme
-				INTO
-					@filmeId,
-					@filme
-			END
-
-			CLOSE cursor_filme
-			DEALLOCATE cursor_filme
-
-			PRINT ''
-
-		FETCH NEXT FROM 
-			cursor_categoria
-		INTO
-			@categoriaId,
-			@categoria
-	END
-
-CLOSE cursor_categoria
-DEALLOCATE cursor_categoria
+-- 7 - Deallocate the cursor
+DEALLOCATE db_cursor 

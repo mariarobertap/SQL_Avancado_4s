@@ -1,3 +1,8 @@
+
+/*
+	Exemplo de Cursor
+	Banco LOCADORA.back
+*/
 --Exercicio--
 --Crie um cursor para listar nome das clientes e da cidade onde mora--
 

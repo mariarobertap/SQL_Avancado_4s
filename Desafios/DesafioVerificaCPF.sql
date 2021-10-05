@@ -1,9 +1,4 @@
 /*
-	Desafio CPF
-	Banco LOCADORA.bak
-*/
-
-/*
 DESAFIO: Crie uma função que receba um número de CPF sem separadores xxxxxxxxxxx (11 dígitos)
 e verifique se o número é um CPF válido ou não. Caso seja um CPF válido retorne o mesmo formatado corretamente
 xxx.xxx.xxx-xx, caso não seja válido, retorne a frase “O CPF digitado é inválido”.
