@@ -214,7 +214,7 @@ DEALLOCATE cursor_exerc_01
 corridos da data de locação, acrescentar multa de 10% no valor, se tiver entre 8 e 15 dias 
 acrescentar multa de 15% no valor, se fazem mais de 15 dias acrescentar multa de 30% do 
 valor*/
-
+select * from cliente
 
 /*DESAFIO: A locadora de filmes oferece um bônus a seus clientes com base no número de 
 locações realizadas durante o ano no valor da média de locações feitas no mesmo período. 
