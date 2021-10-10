@@ -289,3 +289,46 @@ O bônus é aplicado para clientes que fizeram pelo menos 3 locações no ano. Contu
 bônus não é aplicado para clientes que tenham mais de 1 filme para devolução. Utilizando 
 um cursor, crie um procedimento que passado o ano imprima o código do cliente, o seu 
 nome e o valor do seu respectivo bônus*/
+
+
+
+
+
+	SELECT DISTINCT 
+		c.id,
+		c.nome,
+		COUNT(DISTINCT l.fitaId) as 'Locações',
+		(
+			SELECT DISTINCT 
+				COUNT(DISTINCT l2.fitaId)
+			FROM
+				locacao l2
+			WHERE YEAR(l2.dataLocacao) = 2019 AND l2.dataDevolucao is null and c.id = l2.clienteId
+		)  as 'A devolver',
+		YEAR(l.dataLocacao) as 'Ano',
+
+		(	SELECT 
+				(sum(fi.valor)/count(distinct f.id))
+			FROM 
+				locacao l
+			join	
+				fita f on l.fitaId = f.id
+			join
+				filme fi on fi.id = f.filmeId
+				
+			WHERE YEAR(l.dataLocacao) = 2019 and  c.id = l.clienteId
+		) AS 'Media'
+	FROM
+		locacao l
+	JOIN
+		cliente c ON c.id = l.clienteId
+	WHERE YEAR(l.dataLocacao) = 2019
+		GROUP BY 
+		c.nome, c.id, YEAR(l.dataLocacao)
+
+
+
+
+
+
+
