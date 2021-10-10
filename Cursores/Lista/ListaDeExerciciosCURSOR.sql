@@ -214,7 +214,74 @@ DEALLOCATE cursor_exerc_01
 corridos da data de locação, acrescentar multa de 10% no valor, se tiver entre 8 e 15 dias 
 acrescentar multa de 15% no valor, se fazem mais de 15 dias acrescentar multa de 30% do 
 valor*/
-select * from cliente
+
+
+SET NOCOUNT ON;
+
+DECLARE cursor_exerc_01 CURSOR FOR
+
+	select 
+		c.nome, l.dataLocacao, fi.valor
+	from 
+		locacao l
+	join
+		cliente c on c.id = l.clienteId 
+	join	
+		fita f on l.fitaId = f.id
+	join
+		filme fi on fi.id = f.filmeId
+	where 
+		l.dataDevolucao is null
+
+
+	DECLARE @nomeCliente  VARCHAR(100)
+	DECLARE @dataLocacao  DATETIME 
+	DECLARE @ValorLocacao   DECIMAL(10,2)
+
+
+
+
+
+	OPEN cursor_exerc_01
+
+	FETCH NEXT FROM
+		cursor_exerc_01
+	INTO
+		@nomeCliente,
+		@dataLocacao,
+		@ValorLocacao
+
+	WHILE @@FETCH_STATUS = 0
+	BEGIN
+	
+		IF(DATEDIFF(day, @dataLocacao, GETDATE()) = 7)
+		BEGIN
+			PRINT CONCAT(@nomeCliente, ' ', @ValorLocacao, ' ', (@ValorLocacao + (@ValorLocacao*10)/100))
+		END
+		ELSE IF(DATEDIFF(day, @dataLocacao, GETDATE()) >= 8 AND DATEDIFF(day, @dataLocacao, GETDATE()) <=15)
+		BEGIN
+			PRINT CONCAT(@nomeCliente, ' ', @ValorLocacao, ' ', (@ValorLocacao + (@ValorLocacao*15)/100))
+
+		END
+		ELSE IF(DATEDIFF(day, @dataLocacao, GETDATE()) > 15)
+		BEGIN
+			PRINT CONCAT(@nomeCliente, ' ', @ValorLocacao, ' ', (@ValorLocacao + (@ValorLocacao*30)/100))
+
+		END
+
+		PRINT 'teste'
+
+		FETCH NEXT FROM
+			cursor_exerc_01
+		INTO
+		@nomeCliente,
+		@dataLocacao,
+		@ValorLocacao
+
+	END
+
+CLOSE cursor_exerc_01
+DEALLOCATE cursor_exerc_01
 
 /*DESAFIO: A locadora de filmes oferece um bônus a seus clientes com base no número de 
 locações realizadas durante o ano no valor da média de locações feitas no mesmo período. 
