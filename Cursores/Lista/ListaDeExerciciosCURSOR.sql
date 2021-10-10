@@ -378,3 +378,5 @@ drop procedure buscarPordata
 go
 declare @begindate datetime = CAST('2019-30-01 00:00:00.000' AS DATETIME)
 EXEC buscarPordata @begindate
+
+
