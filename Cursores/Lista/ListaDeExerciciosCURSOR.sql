@@ -290,16 +290,6 @@ bônus não é aplicado para clientes que tenham mais de 1 filme para devolução. Ut
 um cursor, crie um procedimento que passado o ano imprima o código do cliente, o seu 
 nome e o valor do seu respectivo bônus*/
 
-
-SELECT * FROM locacao
-
-
-
-
-
-
-
-
 GO
 CREATE PROCEDURE buscarPordata 
 @year DATETIME
