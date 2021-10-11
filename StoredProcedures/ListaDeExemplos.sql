@@ -18,7 +18,7 @@ FROM
 		join fita f on f.id = l.fitaId
 		join filme fi on fi.id = f.filmeId
 		join categoria c on c.id = fi.categoriaId
-		where c.descricao = @Categoria
+		--where c.descricao = @Categoria
 group by l.fitaId, fi.descricao,  c.descricao
 
 EXEC BuscaPorCategoria 'Comédia'
@@ -62,7 +62,7 @@ AS
 		locacao l 
 			join fita f on f.id = l.fitaId
 			join filme fi on fi.id = f.filmeId
-		where l.dataLocacao between @beginDate and @endDate
+		--where l.dataLocacao between @beginDate and @endDate
 	group by YEAR(l.dataLocacao), MONTH(l.dataLocacao), DAY(l.dataLocacao)
 
 	
