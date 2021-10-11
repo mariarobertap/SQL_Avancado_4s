@@ -399,5 +399,3 @@ EXEC buscarPordata @begindate
 			GROUP BY 
 			c.nome, c.id, YEAR(l.dataLocacao)
 
-
-			select * from locacao
