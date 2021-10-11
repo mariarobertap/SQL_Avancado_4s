@@ -1,3 +1,4 @@
+
 /* Maria Roberta
    Banco: Locadora 
   */
@@ -58,9 +59,9 @@ DECLARE cursor_exerc_01 CURSOR FOR
 CLOSE cursor_exerc_01
 DEALLOCATE cursor_exerc_01
 
-/*Criar um cursor para selecionar a data e o valor de locação. Caso o valor da locação seja 
-superior a R$ 12,00, mostrar a data, valor da locação e valor com 10% de desconto. Se o 
-valor da locação for inferior a R$ 12,00 mostrar todos os dados, mas com o valor de 
+/*Criar um cursor para selecionar a data e o valor de locaï¿½ï¿½o. Caso o valor da locaï¿½ï¿½o seja 
+superior a R$ 12,00, mostrar a data, valor da locaï¿½ï¿½o e valor com 10% de desconto. Se o 
+valor da locaï¿½ï¿½o for inferior a R$ 12,00 mostrar todos os dados, mas com o valor de 
 desconto de 8%.*/
 
 
@@ -211,7 +212,7 @@ CLOSE cursor_exerc_01
 DEALLOCATE cursor_exerc_01
 
 /*Utilizando um cursor, apresente os clientes que precisam devolver filmes, se fazem 7 dias 
-corridos da data de locação, acrescentar multa de 10% no valor, se tiver entre 8 e 15 dias 
+corridos da data de locaï¿½ï¿½o, acrescentar multa de 10% no valor, se tiver entre 8 e 15 dias 
 acrescentar multa de 15% no valor, se fazem mais de 15 dias acrescentar multa de 30% do 
 valor*/
 
@@ -283,12 +284,12 @@ DECLARE cursor_exerc_01 CURSOR FOR
 CLOSE cursor_exerc_01
 DEALLOCATE cursor_exerc_01
 
-/*DESAFIO: A locadora de filmes oferece um bônus a seus clientes com base no número de 
-locações realizadas durante o ano no valor da média de locações feitas no mesmo período. 
-O bônus é aplicado para clientes que fizeram pelo menos 3 locações no ano. Contudo, o 
-bônus não é aplicado para clientes que tenham mais de 1 filme para devolução. Utilizando 
-um cursor, crie um procedimento que passado o ano imprima o código do cliente, o seu 
-nome e o valor do seu respectivo bônus*/
+/*DESAFIO: A locadora de filmes oferece um bï¿½nus a seus clientes com base no nï¿½mero de 
+locaï¿½ï¿½es realizadas durante o ano no valor da mï¿½dia de locaï¿½ï¿½es feitas no mesmo perï¿½odo. 
+O bï¿½nus ï¿½ aplicado para clientes que fizeram pelo menos 3 locaï¿½ï¿½es no ano. Contudo, o 
+bï¿½nus nï¿½o ï¿½ aplicado para clientes que tenham mais de 1 filme para devoluï¿½ï¿½o. Utilizando 
+um cursor, crie um procedimento que passado o ano imprima o cï¿½digo do cliente, o seu 
+nome e o valor do seu respectivo bï¿½nus*/
 
 GO
 CREATE PROCEDURE buscarPordata 
@@ -299,7 +300,7 @@ AS
 			 SELECT DISTINCT 
 			c.id,
 			c.nome,
-			COUNT(DISTINCT l.fitaId) as 'Locações',
+			COUNT(DISTINCT l.fitaId) as 'Locaï¿½ï¿½es',
 			(
 				SELECT DISTINCT 
 					COUNT(DISTINCT l2.fitaId)
@@ -378,7 +379,7 @@ EXEC buscarPordata @begindate
 	 SELECT DISTINCT 
 			c.id,
 			c.nome,
-			COUNT(DISTINCT l.fitaId) as 'Locações',
+			COUNT(DISTINCT l.fitaId) as 'Locaï¿½ï¿½es',
 			(
 				SELECT DISTINCT 
 					COUNT(DISTINCT l2.fitaId)
@@ -398,4 +399,5 @@ EXEC buscarPordata @begindate
 		WHERE YEAR(l.dataLocacao) = 2019
 			GROUP BY 
 			c.nome, c.id, YEAR(l.dataLocacao)
+
 
