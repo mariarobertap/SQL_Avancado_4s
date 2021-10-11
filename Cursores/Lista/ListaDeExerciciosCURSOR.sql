@@ -296,7 +296,7 @@ CREATE PROCEDURE buscarPordata
 AS
 
 		DECLARE cursor_exerc_01 CURSOR FOR
-			SELECT DISTINCT 
+			 SELECT DISTINCT 
 			c.id,
 			c.nome,
 			COUNT(DISTINCT l.fitaId) as 'Locações',
@@ -305,25 +305,18 @@ AS
 					COUNT(DISTINCT l2.fitaId)
 				FROM
 					locacao l2
-				WHERE YEAR(l2.dataLocacao) =  YEAR(@year) AND l2.dataDevolucao is null and c.id = l2.clienteId
+				WHERE YEAR(l2.dataLocacao) =  2019 AND l2.dataDevolucao is null and c.id = l2.clienteId
 			)  as 'A devolver',
-
-			(	SELECT 
-					(sum(fi.valor)/count(distinct f.id))
-				FROM 
-					locacao l
-				join	
-					fita f on l.fitaId = f.id
-				join
-					filme fi on fi.id = f.filmeId
-				
-				WHERE YEAR(l.dataLocacao) =  YEAR(@year) and  c.id = l.clienteId
-			) AS 'Media'
+			AVG(fi.valor) as 'Media'
 		FROM
-			locacao l
+			locacao l 
 		JOIN
 			cliente c ON c.id = l.clienteId
-		WHERE YEAR(l.dataLocacao) = YEAR(@year)
+		join	
+			fita f on l.fitaId = f.id
+		join
+			filme fi on fi.id = f.filmeId
+		WHERE YEAR(l.dataLocacao) = 2019
 			GROUP BY 
 			c.nome, c.id, YEAR(l.dataLocacao)
 
@@ -380,3 +373,31 @@ declare @begindate datetime = CAST('2019-30-01 00:00:00.000' AS DATETIME)
 EXEC buscarPordata @begindate
 
 
+
+
+	 SELECT DISTINCT 
+			c.id,
+			c.nome,
+			COUNT(DISTINCT l.fitaId) as 'Locações',
+			(
+				SELECT DISTINCT 
+					COUNT(DISTINCT l2.fitaId)
+				FROM
+					locacao l2
+				WHERE YEAR(l2.dataLocacao) =  2019 AND l2.dataDevolucao is null and c.id = l2.clienteId
+			)  as 'A devolver',
+			AVG(fi.valor) as 'Media'
+		FROM
+			locacao l 
+		JOIN
+			cliente c ON c.id = l.clienteId
+		join	
+			fita f on l.fitaId = f.id
+		join
+			filme fi on fi.id = f.filmeId
+		WHERE YEAR(l.dataLocacao) = 2019
+			GROUP BY 
+			c.nome, c.id, YEAR(l.dataLocacao)
+
+
+			select * from locacao
