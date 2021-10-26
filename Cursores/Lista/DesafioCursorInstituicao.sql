@@ -1,27 +1,28 @@
+-------------BANCO CURSOR----------------
+
 CREATE FUNCTION udfContacts()
     RETURNS @data TABLE (
-        SEQUENCIAL_ID int,
+        SEQUENCIAL_ID INT,
         DATE_ID VARCHAR(8),
         PERIODO_ID VARCHAR(255),
-		CURSO_ID varchar(3),
+		CURSO_ID VARCHAR(3),
         CURSO VARCHAR(25),
-        QUANTIDADE int
+        QUANTIDADE INT
     )
 AS
 BEGIN
 	DECLARE @beginDate DATETIME,
 			@endDate DATETIME,
 			@maxDate DATETIME,
-			@COUNT int	
+			@COUNT INT	
 	
-	
-	SET @maxDate = (SELECT MAX(DATA_ID) FROM desafio_cursor)
 	SET @COUNT = 1
+	SET @maxDate = (SELECT MAX(DATA_ID) FROM desafio_cursor)
 	SET @beginDate = (SELECT MIN(DATA_ID) FROM desafio_cursor)
 	SET @endDate = DATEADD(YEAR, 1, @beginDate)
 	SET @endDate = DATEADD(DAY, 2, @endDate)
 
-	WHILE ( @beginDatE != @maxDate)
+	WHILE (@beginDate <> @maxDate)
 	BEGIN
 		
 		DECLARE curteste CURSOR FOR
@@ -77,25 +78,29 @@ BEGIN
 
 			END
 
-		CLOSE curteste
-		DEALLOCATE curteste
-		SET @beginDate = DATEADD(DAY, 1, @beginDate)
-		SET @endDate = DATEADD(YEAR, 1, @beginDate)
-		SET @endDate = DATEADD(DAY, 2, @endDate)
-		SET @COUNT = @COUNT + 1
-		
+			CLOSE curteste
+			DEALLOCATE curteste
 
+			SET @beginDate = DATEADD(DAY, 1, @beginDate)
+			SET @endDate = DATEADD(YEAR, 1, @beginDate)
+			SET @endDate = DATEADD(DAY, 2, @endDate)
+			SET @COUNT = @COUNT + 1
+	
 	END;
+
     RETURN;
+
 END;
 
 DROP FUNCTION udfContacts 
+
+
 
 SELECT 
 	*
 FROM 
 	udfContacts() 
-WHERE 
+WHERE
 	SEQUENCIAL_ID <= 10 
 ORDER BY
 	1, 2 
